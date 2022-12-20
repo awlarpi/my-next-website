@@ -1,9 +1,47 @@
-.homeLink {
-  position: absolute;
-  top: 0;
-  left: 3;
-  font-size: 25px;
-  color: rgb(127, 127, 127);
+.dark {
+  background-color: black;
+  color: white;
+  border: white;
+}
+
+.light {
+  background-color: white;
+  color: black;
+  border: black;
+}
+
+@media (orientation: portrait) {
+  .gameContainer {
+    width: 100%;
+  }
+  .square {
+    font-size: 26vw;
+  }
+  .resetButton {
+    font-size: 4vw;
+    margin: 1vw;
+  }
+  .appear {
+    position: relative;
+    bottom: 4%;
+  }
+}
+
+@media (orientation: landscape) {
+  .gameContainer {
+    height: 80%;
+  }
+  .square {
+    font-size: 21vh;
+  }
+  .resetButton {
+    font-size: 3vh;
+    margin: 1vh;
+  }
+  .appear {
+    position: relative;
+    bottom: 4.5%;
+  }
 }
 
 .pageContainer {
@@ -12,6 +50,34 @@
   justify-content: center;
   height: 98vh;
   /*border: 1px yellow solid;*/
+}
+
+.homeLink {
+  position: absolute;
+  top: 1vh;
+  left: 1vw;
+  font-size: 25px;
+  opacity: 100%;
+}
+
+.themeSelector {
+  position: absolute;
+  top: 1vh;
+  right: 1vw;
+  border: 0;
+  opacity: 100%;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+}
+.dark .themeSelector {
+  background-color: white;
+}
+.light .themeSelector {
+  background-color: black;
+}
+.themeSelector:hover {
+  opacity: 65%;
 }
 
 .gameContainer {
@@ -33,41 +99,7 @@
   /*border: 2px solid rgb(255, 0, 0);*/
   justify-content: center;
   align-items: center;
-  height: 85%;
-}
-
-@media (orientation: portrait) {
-  .gameContainer {
-    width: 100%;
-  }
-  .square {
-    font-size: 26vw;
-  }
-  .resetButton {
-    font-size: 4vw;
-    margin: 1vw;
-  }
-  .symbol {
-    position: relative;
-    bottom: 4%;
-  }
-}
-
-@media (orientation: landscape) {
-  .gameContainer {
-    height: 80%;
-  }
-  .square {
-    font-size: 21vh;
-  }
-  .resetButton {
-    font-size: 3vh;
-    margin: 1vh;
-  }
-  .symbol {
-    position: relative;
-    bottom: 4.5%;
-  }
+  height: 90%;
 }
 
 .square {
@@ -79,14 +111,8 @@
   text-align: center;
   vertical-align: middle;
   line-height: 0px;
-  border: 3px solid rgb(var(--foreground-rgb));
+  border: 2px solid;
   cursor: pointer;
-  background-color: inherit;
-  color: rgb(var(--foreground-rgb));
-}
-
-.board.tie .square {
-  animation: border-blink 0.3s steps(1) 3;
 }
 
 .infoContainer {
@@ -96,15 +122,15 @@
 }
 
 .resetButton {
+  display: inline-block;
   line-height: 0px;
-  padding-left: 1vw;
-  padding-right: 1vw;
+  padding: 1vh;
   color: inherit;
-  border: 1px solid rgb(var(--foreground-rgb));
+  border: 2px solid;
   background-color: inherit;
-  border-radius: 5%;
+  border-radius: 0%;
   cursor: pointer;
-  margin-top: 0px;
+  margin-top: 0vh;
   margin-bottom: 4.5px;
   align-items: center;
   text-align: center;
@@ -113,7 +139,6 @@
 .resetButton.celebrate {
   animation: upDown 1s ease infinite;
 }
-
 .resetButton:hover {
   background-color: #666;
 }
@@ -121,10 +146,10 @@
 .disabled {
   opacity: 0.5;
   cursor: default;
-  transition: opacity 0.3s ease-out 0.1s;
+  transition: opacity 0.35s ease-out 0.1s;
 }
 
-.symbol {
+.appear {
   animation: appear 0.2s cubic-bezier(0.5, 1.8, 0.1, 1.1);
 }
 
@@ -166,12 +191,6 @@
   }
   50% {
     opacity: 1;
-  }
-}
-
-@keyframes border-blink {
-  50% {
-    border-color: #000;
   }
 }
 

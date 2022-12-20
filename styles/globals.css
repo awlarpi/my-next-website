@@ -106,19 +106,6 @@ a {
   }
 }
 
-.themeSelector {
-  position: absolute;
-  top: 2%;
-  right: 3%;
-  border: 0;
-  opacity: 80%;
-  cursor: pointer;
-}
-
-.themeSelector:hover {
-  opacity: 65%;
-}
-
 /*
 .themeSelector.dark-mode {
   mask-image: url(../public/theme-dark.svg);

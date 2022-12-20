@@ -3,9 +3,6 @@ import gameStyles from "../styles/Game.module.css";
 import Link from "next/link";
 import Head from "next/head";
 import { Oswald } from "@next/font/google";
-import Image from "next/image";
-import whiteBox from "../public/white-box.png";
-import { Html } from "next/document";
 
 const oswald = Oswald({
   subsets: ["latin"],
@@ -24,8 +21,13 @@ export default function Game() {
       window.matchMedia("(prefers-color-scheme: dark)").matches ? true : false
     );
   }, []);
-  const themeClass = isDarkMode ? "dark-mode" : "light-mode";
-  console.log(themeClass);
+  const theme = isDarkMode ? "dark" : "light";
+  console.log(theme);
+
+  //dynamically update theme of application based on theme
+  useEffect(() => {
+    document.body.className = `${gameStyles[theme]}`;
+  }, [theme]);
 
   //check the result of the game on component re-render
   let rawResult = getResult(squares);
@@ -59,17 +61,16 @@ export default function Game() {
   //renders squares based on its location
   const renderSquare = (index) => {
     const disabledClass = result ? "disabled" : "";
-    const symbolClass = squares[index] ? "symbol" : "";
+    const appearClass = squares[index] ? "appear" : "";
     return (
       <div
         className={`${gameStyles.square} ${
           gameStyles[indexToPositionList[index]]
         }`}
         onClick={() => handleTileClick(index)}
-        disabled={squares[index]}
       >
         <div
-          className={`${oswald.className} ${gameStyles[symbolClass]} ${
+          className={`${oswald.className} ${gameStyles[appearClass]} ${
             winningCombination.includes(index) && gameStyles.winTile
           } ${gameStyles[disabledClass]}`}
         >
@@ -102,17 +103,15 @@ export default function Game() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div>
+      <div className={`${gameStyles[theme]}`}>
         {" "}
         <Link href="/" className={`${gameStyles.homeLink} ${oswald.className}`}>
           <u>Home</u>
         </Link>
         <button
-          className={`themeSelector ${themeClass}`}
+          className={`${gameStyles.themeSelector}`}
           onClick={() => setIsDarkMode(!isDarkMode)}
-        >
-          <Image src={whiteBox} alt="white-box" width={40} height={40} />
-        </button>
+        ></button>
         <div className={`${oswald.className} ${gameStyles.pageContainer}`}>
           <div className={gameStyles.gameContainer}>
             <div
