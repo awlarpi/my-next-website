@@ -3,7 +3,7 @@
   top: 0;
   left: 3;
   font-size: 25px;
-  color: rgb(80, 178, 239);
+  color: rgb(127, 127, 127);
 }
 
 .pageContainer {
@@ -55,10 +55,10 @@
 
 @media (orientation: landscape) {
   .gameContainer {
-    height: 95%;
+    height: 80%;
   }
   .square {
-    font-size: 26vh;
+    font-size: 21vh;
   }
   .resetButton {
     font-size: 25px;
@@ -79,10 +79,10 @@
   text-align: center;
   vertical-align: middle;
   line-height: 0px;
-  border: 3px solid rgb(255, 255, 255);
+  border: 3px solid rgb(var(--foreground-rgb));
   cursor: pointer;
-  background-color: rgb(0, 0, 0);
-  color: white;
+  background-color: inherit;
+  color: rgb(var(--foreground-rgb));
 }
 
 .board.tie .square {
@@ -99,13 +99,13 @@
   line-height: 100%;
   padding-left: 5px;
   padding-right: 5px;
-  color: white;
-  border: 1px solid rgb(255, 255, 255);
-  background-color: #000;
-  border-radius: 5px;
+  color: inherit;
+  border: 1px solid rgb(var(--foreground-rgb));
+  background-color: inherit;
+  border-radius: 10px;
   cursor: pointer;
   margin-top: 0px;
-  margin-bottom: 0px;
+  margin-bottom: 2.5px;
 }
 .resetButton.celebrate {
   animation: upDown 1s ease infinite;
@@ -135,7 +135,7 @@
     transform: scale(1);
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.1);
   }
   100% {
     transform: scale(1);
@@ -172,18 +172,6 @@
   }
 }
 
-@keyframes celebrate {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
 @keyframes appear {
   0% {
     transform: scale(0);
@@ -194,30 +182,30 @@
 }
 
 .square.topLeft {
-  border-top-color: #000;
-  border-left-color: #000;
+  border-top-width: 0px;
+  border-left-width: 0px;
 }
 .square.top {
-  border-top-color: #000;
+  border-top-width: 0px;
 }
 .square.topRight {
-  border-top-color: #000;
-  border-right-color: #000;
+  border-top-width: 0px;
+  border-right-width: 0px;
 }
 .square.middleLeft {
-  border-left-color: #000;
+  border-left-width: 0px;
 }
 .square.middleRight {
-  border-right-color: #000;
+  border-right-width: 0px;
 }
 .square.bottomLeft {
-  border-bottom-color: #000;
-  border-left-color: #000;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
 }
 .square.bottom {
-  border-bottom-color: #000;
+  border-bottom-width: 0px;
 }
 .square.bottomRight {
-  border-bottom-color: #000;
-  border-right-color: #000;
+  border-bottom-width: 0px;
+  border-right-width: 0px;
 }
