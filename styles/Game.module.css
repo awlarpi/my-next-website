@@ -44,7 +44,7 @@
     font-size: 26vw;
   }
   .resetButton {
-    font-size: 25px;
+    font-size: 4vw;
     margin: 1vw;
   }
   .symbol {
@@ -61,7 +61,7 @@
     font-size: 21vh;
   }
   .resetButton {
-    font-size: 25px;
+    font-size: 3vh;
     margin: 1vh;
   }
   .symbol {
@@ -96,16 +96,19 @@
 }
 
 .resetButton {
-  line-height: 100%;
-  padding-left: 5px;
-  padding-right: 5px;
+  line-height: 0px;
+  padding-left: 1vw;
+  padding-right: 1vw;
   color: inherit;
   border: 1px solid rgb(var(--foreground-rgb));
   background-color: inherit;
-  border-radius: 10px;
+  border-radius: 5%;
   cursor: pointer;
   margin-top: 0px;
-  margin-bottom: 2.5px;
+  margin-bottom: 4.5px;
+  align-items: center;
+  text-align: center;
+  vertical-align: middle;
 }
 .resetButton.celebrate {
   animation: upDown 1s ease infinite;
