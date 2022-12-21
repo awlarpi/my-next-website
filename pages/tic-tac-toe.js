@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext } from "react";
-import gameStyles from "../styles/Game.module.css";
+import style from "../styles/Game.module.css";
 import Link from "next/link";
 import Head from "next/head";
+import { useImmer } from "use-immer";
 import {
   SquaresContext,
   RawResultContext,
@@ -9,28 +10,21 @@ import {
 } from "./TicTacToeContext";
 
 export default function App() {
-  const [squares, setSquares] = useState(Array(9).fill(null));
+  const [squares, setSquares] = useImmer(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [theme, setTheme] = useState(null);
 
-  //get system theme and dynamically update theme of application based on theme
   useEffect((theme) => {
     setTheme(
       window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light"
     );
-    document.body.className = `${gameStyles[theme]}`;
+    document.body.className = `${style[theme]}`;
   }, []);
 
-  //check the result of the game on component re-render
-  let rawResult = getResult(squares);
-  let result = null;
-  if (rawResult === "draw") {
-    result = "draw";
-  } else if (rawResult) {
-    result = squares[rawResult[0]];
-  }
+  let rawResult = getResult(squares); //if have winner, returns winning indexes in list
+  let result = processToResult(squares, rawResult);
 
   const handleChangeTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -38,9 +32,9 @@ export default function App() {
 
   const handleTileClick = (index) => {
     if (result || squares[index]) return;
-    const newState = [...squares];
-    newState[index] = currentPlayer;
-    setSquares(newState);
+    setSquares((draft) => {
+      draft[index] = currentPlayer;
+    });
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
   };
 
@@ -59,7 +53,7 @@ export default function App() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${gameStyles.main} ${gameStyles[theme]}`}>
+      <main className={`${style.main} ${style[theme]}`}>
         <MenuBar theme={theme} setTheme={handleChangeTheme} />
         <GameContextWrapper
           handleTileClick={handleTileClick}
@@ -80,11 +74,11 @@ export default function App() {
 function MenuBar({ setTheme }) {
   return (
     <>
-      <Link href="/" className={`${gameStyles.homeLink}`}>
+      <Link href="/" className={`${style.homeLink}`}>
         <u>Home</u>
       </Link>
       <button
-        className={`${gameStyles.themeSelector}`}
+        className={`${style.themeSelector}`}
         onClick={() => setTheme()}
       ></button>
     </>
@@ -105,17 +99,13 @@ function GameContextWrapper({ children, handleTileClick, squares, rawResult }) {
 
 function GameContainer({ handleReset, result, currentPlayer }) {
   return (
-    <div className={gameStyles.gameContainer}>
+    <div className={style.gameContainer}>
       <Grid />
-      <div className={`${gameStyles.infoContainer}`}>
-        <button className={`${gameStyles.resetButton}`} onClick={handleReset}>
+      <div className={`${style.infoContainer}`}>
+        <button className={`${style.resetButton}`} onClick={handleReset}>
           Reset
         </button>
-        <button
-          className={`${gameStyles.resetButton} ${
-            result && gameStyles.celebrate
-          }`}
-        >
+        <button className={`${style.resetButton} ${result && style.celebrate}`}>
           {resultButtonText(result, currentPlayer)}
         </button>
       </div>
@@ -125,7 +115,7 @@ function GameContainer({ handleReset, result, currentPlayer }) {
 
 function Grid({}) {
   return (
-    <div className={gameStyles.board}>
+    <div className={style.board}>
       <Square index={0} />
       <Square index={1} />
       <Square index={2} />
@@ -150,14 +140,12 @@ function Square({ index }) {
 
   return (
     <div
-      className={`${gameStyles.square} ${
-        gameStyles[indexToPositionList[index]]
-      }`}
+      className={`${style.square} ${style[indexToPositionList[index]]}`}
       onClick={() => onClick(index)}
     >
       <div
-        className={`${gameStyles[appearClass]} ${gameStyles[isIconDisabled]} ${
-          winningCombination.includes(index) && gameStyles.winTile
+        className={`${style[appearClass]} ${style[isIconDisabled]} ${
+          winningCombination.includes(index) && style.winTile
         }`}
       >
         {squares[index]}
@@ -215,4 +203,13 @@ function getResult(squares) {
     return "draw";
   }
   return null;
+}
+
+function processToResult(squares, rawResult) {
+  let result = null;
+  if (rawResult === "draw") {
+    result = "draw";
+  } else if (rawResult) {
+    result = squares[rawResult[0]];
+  }
 }
