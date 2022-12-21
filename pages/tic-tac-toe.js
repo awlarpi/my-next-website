@@ -97,18 +97,24 @@ function GameContextWrapper({ children, handleTileClick, squares, rawResult }) {
   );
 }
 
-function GameContainer({ handleReset, result, currentPlayer }) {
+function GameContainer(props) {
   return (
     <div className={style.gameContainer}>
       <Grid />
-      <div className={`${style.infoContainer}`}>
-        <button className={`${style.resetButton}`} onClick={handleReset}>
-          Reset
-        </button>
-        <button className={`${style.resetButton} ${result && style.celebrate}`}>
-          {resultButtonText(result, currentPlayer)}
-        </button>
-      </div>
+      <GameMenuBar {...props} />
+    </div>
+  );
+}
+
+function GameMenuBar({ handleReset, result, currentPlayer }) {
+  return (
+    <div className={`${style.infoContainer}`}>
+      <button className={`${style.resetButton}`} onClick={handleReset}>
+        Reset
+      </button>
+      <button className={`${style.resetButton} ${result && style.celebrate}`}>
+        {resultButtonText(result, currentPlayer)}
+      </button>
     </div>
   );
 }
