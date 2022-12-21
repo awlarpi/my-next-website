@@ -7,7 +7,7 @@ import {
   SquaresContext,
   RawResultContext,
   HandleTileClickContext,
-} from "./TicTacToeContext";
+} from "./contexts/TicTacToeContext";
 
 export default function App() {
   const [squares, setSquares] = useImmer(Array(9).fill(null));
