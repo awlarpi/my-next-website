@@ -1,39 +1,41 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import gameStyles from "../styles/Game.module.css";
 import Link from "next/link";
 import Head from "next/head";
+import {
+  SquaresContext,
+  RawResultContext,
+  HandleTileClickContext,
+} from "./TicTacToeContext";
 
-export default function Game() {
+export default function App() {
   const [squares, setSquares] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState("X");
-  const [isDarkMode, setIsDarkMode] = useState(null);
+  const [theme, setTheme] = useState(null);
 
-  //get system theme
-  useEffect(() => {
-    setIsDarkMode(
-      window.matchMedia("(prefers-color-scheme: dark)").matches ? true : false
+  //get system theme and dynamically update theme of application based on theme
+  useEffect((theme) => {
+    setTheme(
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
     );
-  }, []);
-  const theme = isDarkMode ? "dark" : "light";
-  console.log(theme);
-
-  //dynamically update theme of application based on theme
-  useEffect(() => {
     document.body.className = `${gameStyles[theme]}`;
-  }, [theme]);
+  }, []);
 
   //check the result of the game on component re-render
   let rawResult = getResult(squares);
   let result = null;
-  let winningCombination = [];
   if (rawResult === "draw") {
     result = "draw";
   } else if (rawResult) {
     result = squares[rawResult[0]];
-    winningCombination = [...rawResult];
   }
 
-  //handles user click on one of the tiles
+  const handleChangeTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   const handleTileClick = (index) => {
     if (result || squares[index]) return;
     const newState = [...squares];
@@ -42,50 +44,13 @@ export default function Game() {
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
   };
 
-  //handles reset button click
   const handleReset = () => {
+    result = null;
+    rawResult = null;
     setSquares(Array(9).fill(null));
     setCurrentPlayer("X");
-    result = null;
   };
 
-  //renders squares based on its location
-  const renderSquare = (index) => {
-    const isIconDisabled = result ? "icon-disabled" : "";
-    const appearClass = squares[index] ? "appear" : "";
-    return (
-      <div
-        className={`${gameStyles.square} ${
-          gameStyles[indexToPositionList[index]]
-        }`}
-        onClick={() => handleTileClick(index)}
-      >
-        <div
-          className={`${gameStyles[appearClass]} ${
-            winningCombination.includes(index) && gameStyles.winTile
-          } ${gameStyles[isIconDisabled]}`}
-        >
-          {squares[index]}
-        </div>
-      </div>
-    );
-  };
-
-  //decides what text to put as the result indicator
-  const resultButtonText = (result) => {
-    switch (result) {
-      case "draw":
-        return "It's a draw!";
-      case "X":
-        return "X wins!";
-      case "O":
-        return "O wins!";
-      default:
-        return `${currentPlayer}, your turn now!`;
-    }
-  };
-
-  //main JSX
   return (
     <>
       <Head>
@@ -95,58 +60,110 @@ export default function Game() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={`${gameStyles.main} ${gameStyles[theme]}`}>
-        <Link href="/" className={`${gameStyles.homeLink}`}>
-          <u>Home</u>
-        </Link>
-        <button
-          className={`${gameStyles.themeSelector}`}
-          onClick={() => setIsDarkMode(!isDarkMode)}
-        ></button>
-        <div className={gameStyles.gameContainer}>
-          <div className={`${gameStyles.board}`}>
-            {renderSquare(0)}
-            {renderSquare(1)}
-            {renderSquare(2)}
-            {renderSquare(3)}
-            {renderSquare(4)}
-            {renderSquare(5)}
-            {renderSquare(6)}
-            {renderSquare(7)}
-            {renderSquare(8)}
-          </div>
-          <div className={`${gameStyles.infoContainer}`}>
-            <button
-              className={`${gameStyles.resetButton}`}
-              onClick={handleReset}
-            >
-              Reset
-            </button>
-            <button
-              className={`${gameStyles.resetButton} ${
-                result && gameStyles.celebrate
-              }`}
-            >
-              {resultButtonText(result)}
-            </button>
-          </div>
-        </div>
+        <MenuBar theme={theme} setTheme={handleChangeTheme} />
+        <GameContextWrapper
+          handleTileClick={handleTileClick}
+          squares={squares}
+          rawResult={rawResult}
+        >
+          <GameContainer
+            currentPlayer={currentPlayer}
+            handleReset={handleReset}
+            result={result}
+          />
+        </GameContextWrapper>
       </main>
     </>
   );
 }
 
-//calculates result of game; winning combination indexes or draw or null if no result
-function getResult(squares) {
-  for (let i = 0; i < winningCombinations.length; i++) {
-    const [a, b, c] = winningCombinations[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return [a, b, c];
-    }
-  }
-  if (squares.every((square) => square !== null)) {
-    return "draw";
-  }
-  return null;
+function MenuBar({ setTheme }) {
+  return (
+    <>
+      <Link href="/" className={`${gameStyles.homeLink}`}>
+        <u>Home</u>
+      </Link>
+      <button
+        className={`${gameStyles.themeSelector}`}
+        onClick={() => setTheme()}
+      ></button>
+    </>
+  );
+}
+
+function GameContextWrapper({ children, handleTileClick, squares, rawResult }) {
+  return (
+    <HandleTileClickContext.Provider value={handleTileClick}>
+      <SquaresContext.Provider value={squares}>
+        <RawResultContext.Provider value={rawResult}>
+          {children}
+        </RawResultContext.Provider>
+      </SquaresContext.Provider>
+    </HandleTileClickContext.Provider>
+  );
+}
+
+function GameContainer({ handleReset, result, currentPlayer }) {
+  return (
+    <div className={gameStyles.gameContainer}>
+      <Grid />
+      <div className={`${gameStyles.infoContainer}`}>
+        <button className={`${gameStyles.resetButton}`} onClick={handleReset}>
+          Reset
+        </button>
+        <button
+          className={`${gameStyles.resetButton} ${
+            result && gameStyles.celebrate
+          }`}
+        >
+          {resultButtonText(result, currentPlayer)}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Grid({}) {
+  return (
+    <div className={gameStyles.board}>
+      <Square index={0} />
+      <Square index={1} />
+      <Square index={2} />
+      <Square index={3} />
+      <Square index={4} />
+      <Square index={5} />
+      <Square index={6} />
+      <Square index={7} />
+      <Square index={8} />
+    </div>
+  );
+}
+
+function Square({ index }) {
+  const rawResult = useContext(RawResultContext);
+  const squares = useContext(SquaresContext);
+  const onClick = useContext(HandleTileClickContext);
+
+  const winningCombination = Array.isArray(rawResult) ? [...rawResult] : [];
+  const isIconDisabled = rawResult ? "icon-disabled" : "";
+  const appearClass = squares[index] ? "appear" : "";
+
+  return (
+    <div
+      className={`${gameStyles.square} ${
+        gameStyles[indexToPositionList[index]]
+      }`}
+      onClick={() => onClick(index)}
+    >
+      <div
+        className={`${gameStyles[appearClass]} ${gameStyles[isIconDisabled]} ${
+          winningCombination.includes(index) && gameStyles.winTile
+        }`}
+      >
+        {squares[index]}
+      </div>
+    </div>
+  );
 }
 
 const winningCombinations = [
@@ -171,3 +188,31 @@ const indexToPositionList = [
   "bottom",
   "bottomRight",
 ];
+
+//decides what text to put on gameState info button
+const resultButtonText = (result, currentPlayer) => {
+  switch (result) {
+    case "draw":
+      return "It's a draw!";
+    case "X":
+      return "X wins!";
+    case "O":
+      return "O wins!";
+    default:
+      return `${currentPlayer}, your turn now!`;
+  }
+};
+
+//calculates result of game; winning combination indexes or draw or null if no result
+function getResult(squares) {
+  for (let i = 0; i < winningCombinations.length; i++) {
+    const [a, b, c] = winningCombinations[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return [a, b, c];
+    }
+  }
+  if (squares.every((square) => square !== null)) {
+    return "draw";
+  }
+  return null;
+}
