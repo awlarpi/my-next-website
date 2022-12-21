@@ -206,10 +206,12 @@ function getResult(squares) {
 }
 
 function processToResult(squares, rawResult) {
-  let result = null;
-  if (rawResult === "draw") {
-    result = "draw";
-  } else if (rawResult) {
-    result = squares[rawResult[0]];
+  switch (rawResult) {
+    case null:
+      break;
+    case "draw":
+      return "draw";
+    default:
+      return squares[rawResult[0]];
   }
 }
