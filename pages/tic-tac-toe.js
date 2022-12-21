@@ -2,13 +2,6 @@ import React, { useState, useEffect } from "react";
 import gameStyles from "../styles/Game.module.css";
 import Link from "next/link";
 import Head from "next/head";
-import { Oswald } from "@next/font/google";
-
-const oswald = Oswald({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal"],
-});
 
 export default function Game() {
   const [squares, setSquares] = useState(Array(9).fill(null));
@@ -43,11 +36,9 @@ export default function Game() {
   //handles user click on one of the tiles
   const handleTileClick = (index) => {
     if (result || squares[index]) return;
-    setSquares((prevState) => {
-      const newState = [...prevState];
-      newState[index] = currentPlayer;
-      return newState;
-    });
+    const newState = [...squares];
+    newState[index] = currentPlayer;
+    setSquares(newState);
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
   };
 
@@ -60,7 +51,7 @@ export default function Game() {
 
   //renders squares based on its location
   const renderSquare = (index) => {
-    const disabledClass = result ? "disabled" : "";
+    const isIconDisabled = result ? "icon-disabled" : "";
     const appearClass = squares[index] ? "appear" : "";
     return (
       <div
@@ -70,9 +61,9 @@ export default function Game() {
         onClick={() => handleTileClick(index)}
       >
         <div
-          className={`${oswald.className} ${gameStyles[appearClass]} ${
+          className={`${gameStyles[appearClass]} ${
             winningCombination.includes(index) && gameStyles.winTile
-          } ${gameStyles[disabledClass]}`}
+          } ${gameStyles[isIconDisabled]}`}
         >
           {squares[index]}
         </div>
@@ -103,50 +94,43 @@ export default function Game() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className={`${gameStyles[theme]}`}>
-        {" "}
-        <Link href="/" className={`${gameStyles.homeLink} ${oswald.className}`}>
+      <main className={`${gameStyles.main} ${gameStyles[theme]}`}>
+        <Link href="/" className={`${gameStyles.homeLink}`}>
           <u>Home</u>
         </Link>
         <button
           className={`${gameStyles.themeSelector}`}
           onClick={() => setIsDarkMode(!isDarkMode)}
         ></button>
-        <div className={`${oswald.className} ${gameStyles.pageContainer}`}>
-          <div className={gameStyles.gameContainer}>
-            <div
-              className={`${gameStyles.board} ${
-                result === "draw" ? gameStyles.tie : ""
+        <div className={gameStyles.gameContainer}>
+          <div className={`${gameStyles.board}`}>
+            {renderSquare(0)}
+            {renderSquare(1)}
+            {renderSquare(2)}
+            {renderSquare(3)}
+            {renderSquare(4)}
+            {renderSquare(5)}
+            {renderSquare(6)}
+            {renderSquare(7)}
+            {renderSquare(8)}
+          </div>
+          <div className={`${gameStyles.infoContainer}`}>
+            <button
+              className={`${gameStyles.resetButton}`}
+              onClick={handleReset}
+            >
+              Reset
+            </button>
+            <button
+              className={`${gameStyles.resetButton} ${
+                result && gameStyles.celebrate
               }`}
             >
-              {renderSquare(0)}
-              {renderSquare(1)}
-              {renderSquare(2)}
-              {renderSquare(3)}
-              {renderSquare(4)}
-              {renderSquare(5)}
-              {renderSquare(6)}
-              {renderSquare(7)}
-              {renderSquare(8)}
-            </div>
-            <div className={`${gameStyles.infoContainer}`}>
-              <button
-                className={`${gameStyles.resetButton} ${oswald.className}`}
-                onClick={handleReset}
-              >
-                Reset
-              </button>
-              <button
-                className={`${oswald.className} ${gameStyles.resetButton} ${
-                  result && gameStyles.celebrate
-                }`}
-              >
-                {resultButtonText(result)}
-              </button>
-            </div>
+              {resultButtonText(result)}
+            </button>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }
