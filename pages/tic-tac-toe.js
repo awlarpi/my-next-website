@@ -1,18 +1,20 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import style from "../styles/Game.module.css";
 import Link from "next/link";
 import Head from "next/head";
-import { useImmer } from "use-immer";
 import {
   SquaresContext,
-  RawResultContext,
+  ResultContext,
   HandleTileClickContext,
+  IsSinglePlayerContext,
 } from "./contexts/TicTacToeContext";
 
 export default function App() {
-  const [squares, setSquares] = useImmer(Array(9).fill(null));
+  const [squares, setSquares] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [theme, setTheme] = useState(null);
+  const [isSinglePlayer, setIsSinglePlayer] = useState(true);
+  const resultRef = useRef(null);
 
   useEffect((theme) => {
     setTheme(
@@ -23,26 +25,55 @@ export default function App() {
     document.body.className = `${style[theme]}`;
   }, []);
 
-  let rawResult = getResult(squares); //if have winner, returns winning indexes in list
-  let result = processToResult(squares, rawResult);
+  const swapPlayer = () => setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
 
   const handleChangeTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
   const handleTileClick = (index) => {
-    if (result || squares[index]) return;
-    setSquares((draft) => {
-      draft[index] = currentPlayer;
-    });
-    setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
+    //return if gameOver or tile is clicked already
+    if (resultRef.current || squares[index]) return;
+
+    const newSquares = [...squares];
+    newSquares[index] = currentPlayer;
+    resultRef.current = getResult(newSquares); //update result
+
+    //if game ended, rerender and quit
+    if (resultRef.current) {
+      setSquares(newSquares);
+      return;
+    }
+    //game not ended. if double player, swap player and quit
+    if (!isSinglePlayer) {
+      setSquares(newSquares);
+      swapPlayer();
+      return;
+    }
+    //game not ended and single player.
+    const nextBotMove = getBotMoveIndex(index);
+    newSquares[nextBotMove] = currentPlayer === "X" ? "O" : "X";
+    resultRef.current = getResult(newSquares); //update result
+    setSquares(newSquares);
+  };
+
+  const getBotMoveIndex = (prevIndex) => {
+    const emptyIndexes = squares
+      .map((square, index) => (!square ? index : null))
+      .filter((index) => index !== null && index !== prevIndex);
+    if (!emptyIndexes.length) return;
+    return emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
   };
 
   const handleReset = () => {
-    result = null;
-    rawResult = null;
+    resultRef.current = null;
     setSquares(Array(9).fill(null));
     setCurrentPlayer("X");
+  };
+
+  const handlePlayerModeToggle = () => {
+    setIsSinglePlayer(isSinglePlayer === true ? false : true);
+    handleReset();
   };
 
   return (
@@ -58,12 +89,13 @@ export default function App() {
         <GameContextWrapper
           handleTileClick={handleTileClick}
           squares={squares}
-          rawResult={rawResult}
+          result={resultRef.current}
+          isSinglePlayer={isSinglePlayer}
         >
           <GameContainer
             currentPlayer={currentPlayer}
             handleReset={handleReset}
-            result={result}
+            handlePlayerModeToggle={handlePlayerModeToggle}
           />
         </GameContextWrapper>
       </main>
@@ -85,13 +117,15 @@ function MenuBar({ setTheme }) {
   );
 }
 
-function GameContextWrapper({ children, handleTileClick, squares, rawResult }) {
+function GameContextWrapper(props) {
   return (
-    <HandleTileClickContext.Provider value={handleTileClick}>
-      <SquaresContext.Provider value={squares}>
-        <RawResultContext.Provider value={rawResult}>
-          {children}
-        </RawResultContext.Provider>
+    <HandleTileClickContext.Provider value={props.handleTileClick}>
+      <SquaresContext.Provider value={props.squares}>
+        <ResultContext.Provider value={props.result}>
+          <IsSinglePlayerContext.Provider value={props.isSinglePlayer}>
+            {props.children}
+          </IsSinglePlayerContext.Provider>
+        </ResultContext.Provider>
       </SquaresContext.Provider>
     </HandleTileClickContext.Provider>
   );
@@ -106,7 +140,9 @@ function GameContainer(props) {
   );
 }
 
-function GameMenuBar({ handleReset, result, currentPlayer }) {
+function GameMenuBar({ handleReset, currentPlayer, handlePlayerModeToggle }) {
+  const isSinglePlayer = useContext(IsSinglePlayerContext);
+  const result = useContext(ResultContext);
   return (
     <div className={`${style.infoContainer}`}>
       <button className={`${style.resetButton}`} onClick={handleReset}>
@@ -114,6 +150,12 @@ function GameMenuBar({ handleReset, result, currentPlayer }) {
       </button>
       <button className={`${style.resetButton} ${result && style.celebrate}`}>
         {resultButtonText(result, currentPlayer)}
+      </button>
+      <button
+        className={`${style.resetButton}`}
+        onClick={handlePlayerModeToggle}
+      >
+        {isSinglePlayer ? "2P" : "1P"}
       </button>
     </div>
   );
@@ -136,12 +178,12 @@ function Grid({}) {
 }
 
 function Square({ index }) {
-  const rawResult = useContext(RawResultContext);
+  const result = useContext(ResultContext);
   const squares = useContext(SquaresContext);
   const onClick = useContext(HandleTileClickContext);
 
-  const winningCombination = Array.isArray(rawResult) ? [...rawResult] : [];
-  const isIconDisabled = rawResult ? "icon-disabled" : "";
+  const winningCombination = Array.isArray(result) ? [...result] : [];
+  const isIconDisabled = result ? "icon-disabled" : "";
   const appearClass = squares[index] ? "appear" : "";
 
   return (
@@ -188,12 +230,10 @@ const resultButtonText = (result, currentPlayer) => {
   switch (result) {
     case "draw":
       return "It's a draw!";
-    case "X":
-      return "X wins!";
-    case "O":
-      return "O wins!";
-    default:
+    case null:
       return `${currentPlayer}, your turn now!`;
+    default:
+      return `${result[3]} wins!`;
   }
 };
 
@@ -202,22 +242,11 @@ function getResult(squares) {
   for (let i = 0; i < winningCombinations.length; i++) {
     const [a, b, c] = winningCombinations[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return [a, b, c];
+      return [a, b, c, squares[a]];
     }
   }
   if (squares.every((square) => square !== null)) {
     return "draw";
   }
   return null;
-}
-
-function processToResult(squares, rawResult) {
-  switch (rawResult) {
-    case null:
-      break;
-    case "draw":
-      return "draw";
-    default:
-      return squares[rawResult[0]];
-  }
 }
