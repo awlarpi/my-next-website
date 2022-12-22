@@ -34,11 +34,9 @@ export default function App() {
   const handleTileClick = (index) => {
     //return if gameOver or tile is clicked already
     if (resultRef.current || squares[index]) return;
-
     const newSquares = [...squares];
     newSquares[index] = currentPlayer;
     resultRef.current = getResult(newSquares); //update result
-
     //if game ended, rerender and quit
     if (resultRef.current) {
       setSquares(newSquares);
