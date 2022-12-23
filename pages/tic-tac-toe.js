@@ -32,6 +32,8 @@ export default function App() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
+
   const handleTileClick = (index) => {
     //return if gameOver or tile is clicked already
     if (resultRef.current || squares[index]) return;
@@ -51,22 +53,14 @@ export default function App() {
       return;
     }
     //game not ended and is single player
-    setIsBoardEnabled(false); //disable board
-    console.log("is board enabled? " + isBoardEnabled);
-
-    const botMovePromise = new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const nextBotMove = getBotMoveIndex(index);
-        newSquares[nextBotMove] = currentPlayer === "X" ? "O" : "X";
-        setSquares(newSquares);
-        resultRef.current = getResult(newSquares); //update result
-        resolve("Bot Move Successfully Completed!");
-      }, 300);
+    //disable the board immediately to prevent user input, then execute everything else
+    setIsBoardEnabled(false);
+    delay(300).then(() => {
+      newSquares[getBotMoveIndex(index)] = currentPlayer === "X" ? "O" : "X";
+      resultRef.current = getResult(newSquares);
+      setSquares(newSquares);
+      setIsBoardEnabled(true);
     });
-
-    botMovePromise
-      .then(() => setIsBoardEnabled(true))
-      .catch((err) => console.error(err));
   };
 
   const getBotMoveIndex = (prevIndex) => {

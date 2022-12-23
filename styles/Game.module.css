@@ -159,7 +159,6 @@
 
 .disableClick {
   pointer-events: none;
-  opacity: 1;
 }
 
 .appear {
