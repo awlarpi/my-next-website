@@ -14,6 +14,7 @@ export default function App() {
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [theme, setTheme] = useState(null);
   const [isSinglePlayer, setIsSinglePlayer] = useState(true);
+  const [isBoardEnabled, setIsBoardEnabled] = useState(true);
   const resultRef = useRef(null);
 
   useEffect((theme) => {
@@ -34,25 +35,38 @@ export default function App() {
   const handleTileClick = (index) => {
     //return if gameOver or tile is clicked already
     if (resultRef.current || squares[index]) return;
+
+    //rerender square with clicked square
     const newSquares = [...squares];
     newSquares[index] = currentPlayer;
+    setSquares(newSquares);
+
     resultRef.current = getResult(newSquares); //update result
-    //if game ended, rerender and quit
-    if (resultRef.current) {
-      setSquares(newSquares);
-      return;
-    }
+
+    //check result. if game ended, rerender and quit
+    if (resultRef.current) return;
     //game not ended. if double player, swap player and quit
     if (!isSinglePlayer) {
-      setSquares(newSquares);
       swapPlayer();
       return;
     }
-    //game not ended and single player.
-    const nextBotMove = getBotMoveIndex(index);
-    newSquares[nextBotMove] = currentPlayer === "X" ? "O" : "X";
-    resultRef.current = getResult(newSquares); //update result
-    setSquares(newSquares);
+    //game not ended and is single player
+    setIsBoardEnabled(false); //disable board
+    console.log("is board enabled? " + isBoardEnabled);
+
+    const botMovePromise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const nextBotMove = getBotMoveIndex(index);
+        newSquares[nextBotMove] = currentPlayer === "X" ? "O" : "X";
+        setSquares(newSquares);
+        resultRef.current = getResult(newSquares); //update result
+        resolve("Bot Move Successfully Completed!");
+      }, 300);
+    });
+
+    botMovePromise
+      .then(() => setIsBoardEnabled(true))
+      .catch((err) => console.error(err));
   };
 
   const getBotMoveIndex = (prevIndex) => {
@@ -94,6 +108,7 @@ export default function App() {
             currentPlayer={currentPlayer}
             handleReset={handleReset}
             handlePlayerModeToggle={handlePlayerModeToggle}
+            isBoardEnabled={isBoardEnabled}
           />
         </GameContextWrapper>
       </main>
@@ -132,7 +147,7 @@ function GameContextWrapper(props) {
 function GameContainer(props) {
   return (
     <div className={style.gameContainer}>
-      <Grid />
+      <Grid isBoardEnabled={props.isBoardEnabled} />
       <GameMenuBar {...props} />
     </div>
   );
@@ -159,9 +174,9 @@ function GameMenuBar({ handleReset, currentPlayer, handlePlayerModeToggle }) {
   );
 }
 
-function Grid({}) {
+function Grid({ isBoardEnabled }) {
   return (
-    <div className={style.board}>
+    <div className={`${style.board} ${!isBoardEnabled && style.disableClick}`}>
       <Square index={0} />
       <Square index={1} />
       <Square index={2} />
