@@ -15,7 +15,13 @@ export default function App() {
   const [theme, setTheme] = useState(null);
   const [isSinglePlayer, setIsSinglePlayer] = useState(true);
   const [isBoardEnabled, setIsBoardEnabled] = useState(true);
+  const [easyMode, setEasyMode] = useState(true);
   const resultRef = useRef(null);
+
+  const swapPlayer = () => setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
+  const handleChangeTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   useEffect((theme) => {
     setTheme(
@@ -26,49 +32,53 @@ export default function App() {
     document.body.className = `${style[theme]}`;
   }, []);
 
-  const swapPlayer = () => setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
+  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-  const handleChangeTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+  const callAPI = async (dataToSend) => {
+    try {
+      const res = await fetch("http://localhost:3000/api/hello", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ first: dataToSend }),
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
-
-  const handleTileClick = (index) => {
+  const handleTileClick = async (index) => {
     //return if gameOver or tile is clicked already
     if (resultRef.current || squares[index]) return;
-
     //rerender square with clicked square
     const newSquares = [...squares];
     newSquares[index] = currentPlayer;
     setSquares(newSquares);
-
     resultRef.current = getResult(newSquares); //update result
-
-    //check result. if game ended, rerender and quit
-    if (resultRef.current) return;
-    //game not ended. if double player, swap player and quit
-    if (!isSinglePlayer) {
+    //if game ended or single player, quit function
+    if (resultRef.current || !isSinglePlayer) {
       swapPlayer();
       return;
     }
     //game not ended and is single player
-    //disable the board immediately to prevent user input, then execute everything else
     setIsBoardEnabled(false);
-    delay(300).then(() => {
-      newSquares[getBotMoveIndex(index)] = currentPlayer === "X" ? "O" : "X";
-      resultRef.current = getResult(newSquares);
-      setSquares(newSquares);
-      setIsBoardEnabled(true);
-    });
-  };
-
-  const getBotMoveIndex = (prevIndex) => {
-    const emptyIndexes = squares
-      .map((square, index) => (!square ? index : null))
-      .filter((index) => index !== null && index !== prevIndex);
-    if (!emptyIndexes.length) return;
-    return emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
+    await delay(300)
+      .then(() => {
+        //return anyhowBotMove(newSquares);             //anyhowBotMove
+        //return callAPI(newSquares);                   //api call for best move
+        return bestBotMove(newSquares);
+      })
+      .then((botMove) => {
+        newSquares[botMove] = currentPlayer === "X" ? "O" : "X";
+        resultRef.current = getResult(newSquares);
+        setSquares(newSquares);
+        setIsBoardEnabled(true);
+      })
+      .catch((err) => console.log(err));
   };
 
   const handleReset = () => {
@@ -244,7 +254,7 @@ const resultButtonText = (result, currentPlayer) => {
   }
 };
 
-//calculates result of game; winning combination indexes or draw or null if no result
+//returns win-combination indexes+winner or draw or null
 function getResult(squares) {
   for (let i = 0; i < winningCombinations.length; i++) {
     const [a, b, c] = winningCombinations[i];
@@ -257,3 +267,40 @@ function getResult(squares) {
   }
   return null;
 }
+
+const anyhowBotMove = (squares) => {
+  const emptyIndexes = squares
+    .map((square, index) => (!square ? index : null))
+    .filter((index) => index !== null);
+  if (!emptyIndexes.length) return;
+  return emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
+};
+
+const bestBotMove = (squares) => {
+  const possibleMoves = squares
+    .map((square, index) => (!square ? index : null))
+    .filter((index) => index !== null);
+  const miniMaxValues = possibleMoves.map((move) =>
+    miniMax(move, possibleMoves, false, squares)
+  );
+  const indexOfBestMove = miniMaxValues.indexOf(Math.min(...miniMaxValues));
+  return possibleMoves[indexOfBestMove];
+};
+
+//X / player is maximizer, O / Bot is minimizer
+const miniMax = (selectedMove, moves, isMaximizer, gameBoard) => {
+  const newGameBoard = [...gameBoard];
+  newGameBoard[selectedMove] = isMaximizer ? "X" : "O";
+  const result = getResult(newGameBoard);
+  if (result) {
+    if (result === "draw") return 0;
+    if (result[3] === "X") return 5;
+    if (result[3] === "O") return -5;
+  }
+  const newMoves = moves.filter((move) => move !== selectedMove);
+  const miniMaxValues = newMoves.map((move) =>
+    miniMax(move, newMoves, !isMaximizer, newGameBoard)
+  );
+  if (isMaximizer) return Math.min(...miniMaxValues);
+  return Math.max(...miniMaxValues);
+};

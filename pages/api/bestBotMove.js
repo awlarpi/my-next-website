@@ -1,13 +1,4 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-
-export default function handler(req, res) {
-  const receivedData = req.body;
-  const squares = receivedData.first;
-  const bestMove = bestBotMove(squares);
-  res.status(200).send(bestMove);
-  console.log(bestMove);
-}
-
+const squares = ["O", "X", null, null, "X", null, "O", null, null];
 const winningCombinations = [
   [0, 1, 2],
   [3, 4, 5],
@@ -47,12 +38,14 @@ const bestBotMove = (squares) => {
 const miniMax = (selectedMove, moves, isMaximizer, gameBoard) => {
   const newGameBoard = [...gameBoard];
   newGameBoard[selectedMove] = isMaximizer ? "X" : "O";
+
   const result = getResult(newGameBoard);
   if (result) {
     if (result === "draw") return 0;
     if (result[3] === "X") return 5;
     if (result[3] === "O") return -5;
   }
+
   const newMoves = moves.filter((move) => move !== selectedMove);
   const miniMaxValues = newMoves.map((move) =>
     miniMax(move, newMoves, !isMaximizer, newGameBoard)
