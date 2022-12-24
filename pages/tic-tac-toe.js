@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useRef } from "react";
 import style from "../styles/Game.module.css";
 import Link from "next/link";
 import Head from "next/head";
-import { bestBotMove, getResult } from "./functions/tictactoeBot";
+import { bestBotMove, getResult } from "../functions/tictactoeBot";
 import {
   SquaresContext,
   ResultContext,
