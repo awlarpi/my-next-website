@@ -1,5 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { bestBotMove } from "../functions/tictactoeBot";
+import { bestBotMove } from ".../functions/tictactoeBot";
 
 export default function handler(req, res) {
   const receivedData = req.body;
