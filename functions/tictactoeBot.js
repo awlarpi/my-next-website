@@ -13,7 +13,13 @@ export function bestBotMove(squares, isMaximizer) {
       const newBoard = squares.map((square, index) =>
         index === move ? "X" : square
       );
-      const evaluation = newMiniMax(newBoard, false, 1);
+      const evaluation = newMiniMax(
+        newBoard,
+        false,
+        1,
+        Number.NEGATIVE_INFINITY,
+        Number.POSITIVE_INFINITY
+      );
       if (evaluation > bestMove.evaluation) {
         bestMove.move = move;
         bestMove.evaluation = evaluation;
@@ -33,7 +39,13 @@ export function bestBotMove(squares, isMaximizer) {
     const newBoard = squares.map((square, index) =>
       index === move ? "O" : square
     );
-    const evaluation = newMiniMax(newBoard, true, 1);
+    const evaluation = newMiniMax(
+      newBoard,
+      true,
+      1,
+      Number.NEGATIVE_INFINITY,
+      Number.POSITIVE_INFINITY
+    );
     if (evaluation < bestMove.evaluation) {
       bestMove.move = move;
       bestMove.evaluation = evaluation;
@@ -47,7 +59,7 @@ export function bestBotMove(squares, isMaximizer) {
   return bestMove.move;
 }
 
-const newMiniMax = (board, isMaximizer, depth) => {
+const newMiniMax = (board, isMaximizer, depth, alpha, beta) => {
   //base case
   const result = getResult(board);
   if (result) {
@@ -61,25 +73,31 @@ const newMiniMax = (board, isMaximizer, depth) => {
 
   //if is maximizer
   if (isMaximizer) {
+    let newAlpha = alpha;
     let maxEval = Number.NEGATIVE_INFINITY;
-    possibleMoves.forEach((move) => {
+    possibleMoves.some((move) => {
       const newBoard = board.map((square, index) =>
         index === move ? "X" : square
       );
-      const evaluation = newMiniMax(newBoard, false, depth + 1);
+      const evaluation = newMiniMax(newBoard, false, depth + 1, newAlpha, beta);
       if (evaluation > maxEval) maxEval = evaluation;
+      if (maxEval > newAlpha) newAlpha = maxEval;
+      return beta <= newAlpha;
     });
     return maxEval;
   }
 
   //if is minimizer
+  let newBeta = beta;
   let minEval = Number.POSITIVE_INFINITY;
-  possibleMoves.forEach((move) => {
+  possibleMoves.some((move) => {
     const newBoard = board.map((square, index) =>
       index === move ? "O" : square
     );
-    const evaluation = newMiniMax(newBoard, true, depth + 1);
+    const evaluation = newMiniMax(newBoard, true, depth + 1, alpha, newBeta);
     if (evaluation < minEval) minEval = evaluation;
+    if (minEval < newBeta) newBeta = minEval;
+    return newBeta <= alpha;
   });
   return minEval;
 };
