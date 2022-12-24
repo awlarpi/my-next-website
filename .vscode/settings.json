@@ -7,5 +7,6 @@
     "noopener",
     "noreferrer",
     "vercel"
-  ]
+  ],
+  "cSpell.ignoreWords": ["tictactoe"]
 }
