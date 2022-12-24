@@ -94,7 +94,7 @@ export default function App() {
 
       setIsBoardEnabled(true);
 
-      /* callAPI(newSquares, isPlayerXTurn()); */ //for AI playing against itself
+      /*callAPI(newSquares, isPlayerXTurn());*/ //for AI playing against itself
     });
   }
 
@@ -237,7 +237,7 @@ function Square({ index }) {
   const squares = useContext(SquaresContext);
   const onClick = useContext(HandleTileClickContext);
 
-  const winningCombination = Array.isArray(result) ? [...result] : [];
+  const winningCombination = result ? result.winningCombination : [];
   const isIconDisabled = result ? "icon-disabled" : "";
   const appearClass = squares[index] ? "appear" : "";
 
@@ -271,17 +271,12 @@ const indexToPositionList = [
 
 //decides what text to put on gameState info button
 const resultButtonText = (result, currentPlayer) => {
-  switch (result) {
-    case "draw":
-      return "It's a draw!";
-    case null:
-      return `${currentPlayer}, your turn now!`;
-    default:
-      return `${result[3]} wins!`;
-  }
+  if (!result) return `${currentPlayer}, your turn now!`;
+  if (result.winner === "null") return "It's a draw!";
+  return `${result.winner} wins!`;
 };
 
-//call pass gameState and player
+//pass gameState and player
 //X is maximizer and O is minimizer
 async function callAPI(squares, isMaximizer) {
   try {
