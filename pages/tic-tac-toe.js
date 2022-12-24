@@ -94,8 +94,7 @@ export default function App() {
 
       setIsBoardEnabled(true);
 
-      //callAPI(gameState, isPlayerX?;
-      callAPI(newSquares, isPlayerXTurn());
+      /* callAPI(newSquares, isPlayerXTurn()); */ //for AI playing against itself
     });
   }
 
