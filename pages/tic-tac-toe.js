@@ -2,6 +2,7 @@ import { useState, useEffect, useContext, useRef } from "react";
 import style from "../styles/Game.module.css";
 import Link from "next/link";
 import Head from "next/head";
+import axios from "axios";
 import { bestBotMove, getResult } from "../functions/tictactoeBot";
 import {
   SquaresContext,
@@ -40,6 +41,16 @@ export default function App() {
     return playerRef.current === "X" ? true : false;
   }
 
+  function onIndexUpdate(index) {
+    //generate new squares
+    const newSquares = [...squaresRef.current];
+    newSquares[index] = playerRef.current;
+    //update squares, results, and swap players
+    updateSquares(newSquares);
+    swapPlayers();
+    resultRef.current = getResult(newSquares);
+  }
+
   useEffect((theme) => {
     setTheme(
       window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -49,7 +60,7 @@ export default function App() {
     document.body.className = `${style[theme]}`;
   }, []);
 
-  /** 
+  /*
   const handleOtherPlayerMove = async (newSquares) => {
     setIsBoardEnabled(false);
     await delay(300)
@@ -69,53 +80,30 @@ export default function App() {
       })
       .catch((err) => console.log(err));
   };
-  **/
+  */
+
+  function getOpponentMove(squares, isMaximizer) {
+    const url = "http://localhost:3000/api/tic-tac-toe";
+    const data = { first: squares, second: isMaximizer };
+    return axios.post(url, data);
+  }
 
   async function handleBotMove() {
     setIsBoardEnabled(false);
-
-    await delay(300).then(() => {
-      const startTime = performance.now();
-
-      //get botMove
-      const botMove = bestBotMove(squaresRef.current, isPlayerXTurn());
-
-      const endTime = performance.now();
-      console.log(`Call to botMove took ${endTime - startTime}ms`);
-
-      //main function for handling botMove
-      const newSquares = [...squaresRef.current];
-      newSquares[botMove] = playerRef.current;
-
-      //update squares, results, and swap players
-      updateSquares(newSquares);
-      swapPlayers();
-      resultRef.current = getResult(newSquares);
-
-      setIsBoardEnabled(true);
-
-      /*callAPI(newSquares, isPlayerXTurn());*/ //for AI playing against itself
-    });
+    await delay(300);
+    const botMove = bestBotMove(squaresRef.current, isPlayerXTurn());
+    onIndexUpdate(botMove);
+    setIsBoardEnabled(true);
+    //test data fetching
+    const res = await getOpponentMove(squaresRef.current, isPlayerXTurn());
+    console.log(`\nPlayer X\nBest Move: ${res.data}\n\n`);
   }
 
   function handleTileClick(index) {
-    //return if gameOver or tile is clicked already
-    if (resultRef.current || squares[index]) return;
-
-    //generate new game state
-    const newSquares = [...squaresRef.current];
-    newSquares[index] = playerRef.current;
-
-    //update squares, results, and swap players
-    updateSquares(newSquares);
-    swapPlayers();
-    resultRef.current = getResult(newSquares);
-
-    //if gameOver or is double player, return immediately
-    if (resultRef.current || !isSinglePlayer) return;
-
-    //game not ended and is single player
-    handleBotMove();
+    if (resultRef.current || squares[index]) return; //return if gameOver or tile is clicked already
+    onIndexUpdate(index); //handle everything and swap players
+    if (resultRef.current || !isSinglePlayer) return; //if gameOver or is double player
+    handleBotMove(); //game not ended and is single player
   }
 
   function handleReset() {
@@ -275,22 +263,3 @@ const resultButtonText = (result, currentPlayer) => {
   if (result.winner === "null") return "It's a draw!";
   return `${result.winner} wins!`;
 };
-
-//pass gameState and player
-//X is maximizer and O is minimizer
-async function callAPI(squares, isMaximizer) {
-  try {
-    const res = await fetch("http://localhost:3000/api/tic-tac-toe", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ first: squares, second: isMaximizer }),
-    });
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    console.error(err);
-  }
-}

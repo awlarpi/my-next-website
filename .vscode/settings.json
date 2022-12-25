@@ -6,6 +6,7 @@
     "maximiser",
     "noopener",
     "noreferrer",
+    "todos",
     "vercel"
   ],
   "cSpell.ignoreWords": ["tictactoe"]
