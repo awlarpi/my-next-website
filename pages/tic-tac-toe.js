@@ -83,7 +83,7 @@ export default function App() {
   */
 
   function getOpponentMove(squares, isMaximizer) {
-    const url = "https://my-next-website-one.vercel.app/api/tic-tac-toe";
+    const url = "/api/tic-tac-toe";
     const data = { first: squares, second: isMaximizer };
     return axios.post(url, data);
   }
