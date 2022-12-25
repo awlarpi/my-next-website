@@ -83,12 +83,9 @@ export default function App() {
   */
 
   function getOpponentMove(squares, isMaximizer) {
-    const url =
-      "https://my-next-website-one.vercel.app/tic-tac-toe/api/tic-tac-toe";
+    const url = "https://my-next-website-one.vercel.app/api/tic-tac-toe";
     const data = { first: squares, second: isMaximizer };
-    return axios.post(url, data).catch((err) => {
-      throw new Error(err);
-    });
+    return axios.post(url, data);
   }
 
   async function handleBotMove() {
@@ -98,13 +95,8 @@ export default function App() {
     onIndexUpdate(botMove);
     setIsBoardEnabled(true);
     //test data fetching
-    const res = await getOpponentMove(
-      squaresRef.current,
-      isPlayerXTurn()
-    ).catch((err) => {
-      console.log(err);
-    });
-    console.log(`\nPlayer X\nBest Move: ${res.data}\n\n`);
+    const res = await getOpponentMove(squaresRef.current, isPlayerXTurn());
+    if (res) console.log(`\nPlayer X\nBest Move: ${res.data}\n\n`);
   }
 
   function handleTileClick(index) {
