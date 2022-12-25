@@ -96,7 +96,7 @@ export default function App() {
     setIsBoardEnabled(true);
     //test data fetching
     const res = await getOpponentMove(squaresRef.current, isPlayerXTurn());
-    if (res) console.log(`\nPlayer X\nBest Move: ${res.data}\n\n`);
+    if (res) console.log(`response: ${res}`);
   }
 
   function handleTileClick(index) {
