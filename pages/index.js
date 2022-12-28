@@ -96,7 +96,7 @@ export default function Home() {
             rel="noopener noreferrer"
           >
             <h2 className={inter.className}>
-              Todos <span>-&gt;</span>
+              Deploy <span>-&gt;</span>
             </h2>
             <p className={inter.className}>
               Discover and deploy boilerplate example Next.js&nbsp;projects.
@@ -104,16 +104,14 @@ export default function Home() {
           </a>
 
           <Link
-            href="./tic-tac-toe"
+            href="./tictactoe"
             className={styles.card}
             rel="noopener noreferrer"
           >
             <h2 className={inter.className}>
               Tic-Tac-Toe <span>-&gt;</span>
             </h2>
-            <p className={inter.className}>
-              Play tic-tac-toe! Choose between single or double player modes.
-            </p>
+            <p className={inter.className}>Play tic-tac-toe!</p>
           </Link>
         </div>
       </main>

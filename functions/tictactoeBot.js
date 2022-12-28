@@ -1,4 +1,5 @@
-export function bestBotMove(squares, isMaximizer) {
+export function bestBotMove(squares, player) {
+  const isMaximizer = player === "X" ? true : false;
   //generate possible moves from current state
   const possibleMoves = getPossibleMoves(squares);
 
@@ -29,9 +30,11 @@ export function bestBotMove(squares, isMaximizer) {
       }
     });
 
+    /*
     console.log(
       `\nPlayer X\nBest Move: ${bestMove.move}\nEvaluation: ${bestMove.evaluation}\n___________________`
     );
+    */
 
     return bestMove.move;
   }
@@ -55,9 +58,11 @@ export function bestBotMove(squares, isMaximizer) {
     }
   });
 
+  /*
   console.log(
     `\nPLayer O\nBest Move: ${bestMove.move}\nEvaluation: ${bestMove.evaluation}\n\n`
   );
+  */
 
   return bestMove.move;
 }

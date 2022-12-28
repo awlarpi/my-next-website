@@ -15,9 +15,12 @@
     "eslint": "8.29.0",
     "eslint-config-next": "13.0.7",
     "immer": "^9.0.16",
+    "mongodb": "^4.13.0",
     "next": "13.0.7",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "socket.io": "^4.5.4",
+    "socket.io-client": "^4.5.4",
     "typescript": "^4.9.4",
     "use-immer": "^0.8.1"
   }

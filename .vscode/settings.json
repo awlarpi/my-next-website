@@ -3,6 +3,7 @@
     "callout",
     "crossorigin",
     "Gameboard",
+    "lcbijlw",
     "maximiser",
     "noopener",
     "noreferrer",
@@ -10,7 +11,8 @@
     "settodos",
     "tactactoe",
     "todos",
-    "vercel"
+    "vercel",
+    "websockets"
   ],
   "cSpell.ignoreWords": ["tictactoe"]
 }
