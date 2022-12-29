@@ -82,6 +82,14 @@
   opacity: 100%;
 }
 
+.roomId {
+  position: absolute;
+  top: 1vh;
+  left: 25%;
+  font-size: 25px;
+  opacity: 100%;
+}
+
 .themeSelector {
   position: absolute;
   top: 1vh;

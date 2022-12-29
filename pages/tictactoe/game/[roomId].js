@@ -50,7 +50,7 @@ export async function getServerSideProps(context) {
   //fetch room data
   console.log(`fetching room ${roomId}...`);
   const room = await collection
-    .findOne({ Room_ID: roomId })
+    .findOne({ _id: roomId })
     .catch((err) => console.error(err));
 
   //disconnect from DB

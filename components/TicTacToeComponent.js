@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import style from "../styles/Game.module.css";
-import Link from "next/link";
 import Head from "next/head";
 import axios from "axios";
 import { useRouter } from "next/router";
@@ -10,32 +9,36 @@ import {
   ResultContext,
   HandleTileClickContext,
   IsSinglePlayerContext,
+  OnlineModeContext,
 } from "../contexts/TicTacToeContext";
-const util = require("util");
+import {
+  delay,
+  randomBoolean,
+  indexToPositionList,
+  allAreNull,
+} from "../functions/utils";
 
 export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
   const router = useRouter();
   const [squares, setSquares] = useState(Array(9).fill(null));
   const [theme, setTheme] = useState(null);
-  const [isSinglePlayer, setIsSinglePlayer] = useState(true);
-  const [isOpponentTurn, setIsOpponentTurn] = useState(Math.random() < 0.5);
+  const [isSinglePlayer, setIsSinglePlayer] = useState(
+    onlineMode ? false : true
+  );
+  const [isOpponentTurn, setIsOpponentTurn] = useState(
+    onlineMode ? !startFirst : Math.random() < 0.5
+  );
   const resultRef = useRef(null);
   const playerRef = useRef("X");
   const squaresRef = useRef(squares);
+  const myMoveRef = useRef(null);
 
   useEffect(() => {
+    console.log("roomId: " + roomId);
     const handleOnlineModeSecondPlayer = async () => {
-      try {
-        await listenForOpponentMove();
-      } catch (error) {
-        console.error(error);
-      }
+      await listenForOpponentMove();
     };
-    if (onlineMode) {
-      setIsOpponentTurn(!startFirst);
-      setIsSinglePlayer(false);
-      if (!startFirst) handleOnlineModeSecondPlayer;
-    }
+    if (onlineMode && !startFirst) handleOnlineModeSecondPlayer();
     setTheme(
       window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
@@ -48,27 +51,69 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
   useEffect(
     () => {
       const handleOnlineModeMove = async () => {
-        try {
-          await updateMyMove();
-          await listenForOpponentMove();
-        } catch (error) {
-          console.error(error);
-        }
+        await updateAndListen();
+      };
+      const onResultTrue = async () => {
+        await updateMyMove();
       };
       console.log(`1. Is opponent turn? ${isOpponentTurn}`);
-      if (!onlineMode && isOpponentTurn) {
-        handleBotMove();
+      //offline mode:
+      if (!onlineMode) {
+        if (isOpponentTurn) handleBotMove();
         return;
-      } else if (onlineMode && isOpponentTurn) {
+      }
+      //Online mode
+      if (resultRef.current) {
+        //if gameOver
+        console.log("case one; game over: updating my move...");
+        onResultTrue();
+        return;
+      } else if (!startFirst && allAreNull(squares)) {
+        console.log(
+          "case two; is beginning and is opponent turn: skip sending my move..."
+        );
+        return;
+      } else if (isOpponentTurn) {
+        console.log({
+          squares: squares,
+          allAreNull: allAreNull(squares),
+        });
+        console.log(
+          "case three; past beginning and is opponent turn: updating and listening..."
+        );
         handleOnlineModeMove();
         return;
       } else {
-        console.log("2. Effect not executed");
+        console.log("all conditions fell through: skipping...");
+        return;
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isOpponentTurn]
   );
+
+  async function updateAndListen() {
+    console.log("2. Update and listen to room: " + roomId);
+    try {
+      //update board in database
+      const response = await axios.get("/api/tictactoeAPI", {
+        params: {
+          roomId: roomId,
+          request: "updateAndListen",
+          Latest_Move: myMoveRef.current,
+        },
+      });
+      const opponentMove = response.data.Latest_Move;
+
+      console.log(`3. Successfully retrieved opponent move: ${opponentMove}`);
+      await delay(100);
+
+      onIndexUpdate(opponentMove);
+      setIsOpponentTurn(false);
+    } catch (err) {
+      console.error("3. Failed to update database!");
+    }
+  }
 
   async function listenForOpponentMove() {
     try {
@@ -79,63 +124,58 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
         params: {
           roomId: roomId,
           request: "listenForOpponentMove",
-          Is_X_Turn: isXTurn(),
         },
       });
 
-      console.log(`5. Successfully retrieved opponent move!`);
-      console.log("Response: " + response);
+      const opponentMove = response.data.Latest_Move;
 
-      const newSquares = response.data.Board_State;
-
-      //update local state
-      updateSquares(newSquares);
-      swapPlayers();
-      resultRef.current = getResult(newSquares);
+      console.log(`5. Successfully retrieved opponent move: ${opponentMove}`);
+      await delay(100);
+      onIndexUpdate(opponentMove);
       setIsOpponentTurn(false);
     } catch (error) {
-      console.error("Failed to fetch opponent move!");
+      console.error("5. Failed to fetch opponent move");
     }
   }
 
-  async function updateMyMove() {
-    console.log("2. Updating my move...");
+  async function updateMyMove(myMove) {
+    console.log("2. Updating my move to roomId: " + roomId);
     try {
       //update board in database
-      const response = await axios.post(
-        "/api/tictactoeAPI",
-        {
-          squares: squaresRef.current,
-          Is_X_Turn: isXTurn(playerRef.current),
+      await axios.post("/api/tictactoeAPI", null, {
+        params: {
+          roomId: roomId,
+          Latest_Move: myMoveRef.current,
         },
-        { params: { roomId: roomId } }
-      );
+      });
       console.log(`3. Successfully updated database!`);
     } catch (err) {
       console.error("3. Failed to update database!");
     }
   }
+
   function handleTileClick(index) {
+    if (squares[index]) return; //return if tile is full  already
+    myMoveRef.current = index;
     if (!onlineMode) {
       if (resultRef.current || squares[index]) return; //return if gameOver or tile is clicked already
-      onIndexUpdate(index); //handle everything and swap players
+      onIndexUpdate(index);
+      //handle everything and swap players
       if (resultRef.current || !isSinglePlayer) return; //if gameOver or is double player
       setIsOpponentTurn(true); //game not ended and is single player
       return;
     }
     //else is online mode
-    if (resultRef.current || squares[index]) return; //return if gameOver or tile is clicked already
-    onIndexUpdate(index); //handle everything and swap players
-    if (resultRef.current) return; //if gameOver or is double player
+    onIndexUpdate(index);
     setIsOpponentTurn(true);
   }
-  const handleBotMove = async () => {
+  async function handleBotMove() {
     console.log("2. Executing handleBotMove...");
     await delay(300);
     const botMove = bestBotMove(squaresRef.current, playerRef.current);
     onIndexUpdate(botMove);
     setIsOpponentTurn(false);
-  };
+  }
   function handleReset() {
     squaresRef.current = Array(9).fill(null);
     setSquares(squaresRef.current);
@@ -200,19 +240,22 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
           theme={theme}
           setTheme={handleChangeTheme}
           handleBackClick={handleBackClick}
+          roomId={roomId}
+          onlineMode={onlineMode}
         />
         <GameContextWrapper
           handleTileClick={handleTileClick}
           squares={squares}
           result={resultRef.current}
           isSinglePlayer={isSinglePlayer}
+          onlineMode={onlineMode}
         >
           <GameContainer
             currentPlayer={playerRef.current}
             handleReset={handleReset}
             handlePlayerModeToggle={handlePlayerModeToggle}
             isBoardEnabled={!isOpponentTurn}
-            onlineMode={onlineMode}
+            startFirst={startFirst}
           />
         </GameContextWrapper>
       </main>
@@ -220,12 +263,18 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
   );
 }
 
-function MenuBar({ setTheme, handleBackClick }) {
+function MenuBar({ setTheme, handleBackClick, roomId, onlineMode }) {
   return (
     <>
       <div onClick={() => handleBackClick()} className={`${style.homeLink}`}>
         <u>Back</u>
       </div>
+      {onlineMode && (
+        <div className={`${style.roomId}`}>
+          <p>Room: {roomId}</p>
+        </div>
+      )}
+      <div></div>
       <button
         className={`${style.themeSelector}`}
         onClick={() => setTheme()}
@@ -236,15 +285,17 @@ function MenuBar({ setTheme, handleBackClick }) {
 
 function GameContextWrapper(props) {
   return (
-    <HandleTileClickContext.Provider value={props.handleTileClick}>
-      <SquaresContext.Provider value={props.squares}>
-        <ResultContext.Provider value={props.result}>
-          <IsSinglePlayerContext.Provider value={props.isSinglePlayer}>
-            {props.children}
-          </IsSinglePlayerContext.Provider>
-        </ResultContext.Provider>
-      </SquaresContext.Provider>
-    </HandleTileClickContext.Provider>
+    <OnlineModeContext.Provider value={props.onlineMode}>
+      <HandleTileClickContext.Provider value={props.handleTileClick}>
+        <SquaresContext.Provider value={props.squares}>
+          <ResultContext.Provider value={props.result}>
+            <IsSinglePlayerContext.Provider value={props.isSinglePlayer}>
+              {props.children}
+            </IsSinglePlayerContext.Provider>
+          </ResultContext.Provider>
+        </SquaresContext.Provider>
+      </HandleTileClickContext.Provider>
+    </OnlineModeContext.Provider>
   );
 }
 
@@ -261,8 +312,9 @@ function GameMenuBar({
   handleReset,
   currentPlayer,
   handlePlayerModeToggle,
-  onlineMode,
+  startFirst,
 }) {
+  const onlineMode = useContext(OnlineModeContext);
   const isSinglePlayer = useContext(IsSinglePlayerContext);
   const result = useContext(ResultContext);
   return (
@@ -274,7 +326,9 @@ function GameMenuBar({
       )}
 
       <button className={`${style.resetButton} ${result && style.celebrate}`}>
-        {resultButtonText(result, currentPlayer)}
+        {onlineMode
+          ? onlineCurrentPlayerText(result, currentPlayer, startFirst)
+          : offlineCurrentPlayerText(result, currentPlayer)}
       </button>
 
       {!onlineMode && (
@@ -330,26 +384,25 @@ function Square({ index }) {
   );
 }
 
-const indexToPositionList = [
-  "topLeft",
-  "top",
-  "topRight",
-  "middleLeft",
-  "middle",
-  "middleRight",
-  "bottomLeft",
-  "bottom",
-  "bottomRight",
-];
-
 //decides what text to put on gameState info button
-const resultButtonText = (result, currentPlayer) => {
+function offlineCurrentPlayerText(result, currentPlayer) {
   if (!result) return `${currentPlayer}, your turn now!`;
-  if (result.winner === "null") return "It's a draw!";
-  return `${result.winner} wins!`;
-};
-function delay(ms) {
-  return new Promise((res) => setTimeout(res, ms));
+  return winnerText(result.winner);
 }
-const randomBoolean = () => Math.random() < 0.5;
-const isXTurn = (p) => p === "X" && true;
+
+function onlineCurrentPlayerText(result, currentPlayer, startFirst) {
+  if (result) return winnerText(result.winner);
+  if (startFirst) {
+    //player is playing as X
+    if (currentPlayer === "X") return `Player X, your move!`;
+    return `Waiting for opponent to make a move...`;
+  }
+  //player is playing as O
+  if (currentPlayer === "O") return `Player O, your move!`;
+  return `Waiting for opponent to make a move...`;
+}
+
+function winnerText(winner) {
+  if (winner === "null") return "It's a draw!";
+  return `${winner} wins!`;
+}
