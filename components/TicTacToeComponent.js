@@ -184,8 +184,8 @@ export default function TicTacToeGame({
       setError(error.response.status);
       alert("Room deleted!");
     } else {
-      setError(500);
-      alert("Room deleted!");
+      setError(error.response.status);
+      alert("Error!");
     }
   };
 

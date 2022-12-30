@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       }
     } else if (method === "GET" && request === "listenForOpponentMove") {
       try {
-        const response = await handleListener(coll, roomId, res);
+        const response = await handleListener(coll, roomId);
         res.status(200).send(response);
       } catch (error) {
         res.status(400).send(error.message);
@@ -49,8 +49,7 @@ export default async function handler(req, res) {
           coll,
           roomId,
           Latest_Move,
-          Squares,
-          res
+          Squares
         );
         res.status(200).send(latestMoveObject);
       } catch (error) {
@@ -190,7 +189,7 @@ async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares, res) {
   }
 }
 
-async function handleListener(coll, roomId, res, timeOutInMs = 9876) {
+async function handleListener(coll, roomId, timeOutInMs = 9876) {
   try {
     const room = await coll.findOne({ _id: roomId });
     if (!room) throw new Error(`room ${roomId} not found!`);
@@ -236,7 +235,7 @@ async function monitorRoomWithHasNext(coll, timeOutInMs, pipeline) {
     if (error.message === "timeout!") {
       console.error(`time out! closing change stream...`);
       changeStream.close();
-      throw new Error("timeout!");
+      throw new Error("Request exceeded runtime limit!");
     } else if (error.message === "room deleted!") {
       console.error(`room deleted! closing change stream...`);
       changeStream.close();
