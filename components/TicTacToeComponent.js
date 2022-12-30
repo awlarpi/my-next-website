@@ -126,7 +126,6 @@ export default function TicTacToeGame({
       );
       const opponentMove = response.data.Latest_Move;
       console.log(`3. Successfully retrieved opponent move: ${opponentMove}`);
-      await delay(100);
       onIndexUpdate(opponentMove);
       setIsOpponentTurn(false);
     } catch (error) {
@@ -146,7 +145,6 @@ export default function TicTacToeGame({
       });
       const opponentMove = response.data.Latest_Move;
       console.log(`5. Successfully retrieved opponent move: ${opponentMove}`);
-      await delay(100);
       onIndexUpdate(opponentMove);
       setIsOpponentTurn(false);
     } catch (error) {

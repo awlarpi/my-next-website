@@ -1,25 +1,23 @@
-import { MongoClient } from "mongodb";
+import { connectToDatabase } from "../../functions/mongoDB";
 var crypto = require("crypto");
 const util = require("util");
-import { delay } from "../../functions/utils";
 
 export default async function handler(req, res) {
   const { roomId, request, Latest_Move } = req.query;
   const { Squares } = req.body;
   const method = req.method;
-  const uri = process.env.DB_URI;
-  const client = new MongoClient(uri);
+  let client = null;
 
   console.log(`START | METHOD: ${method} | REQUEST: ${request}`);
+
   try {
-    await client.connect();
+    client = await connectToDatabase();
   } catch (error) {
     console.error("Could not connect to MongoClient");
     res.status(500).send("Could not connect to database");
     return;
   }
 
-  console.log("db client connected!");
   const database = client.db("tictactoe");
   const coll = database.collection("rooms");
 
@@ -79,8 +77,6 @@ export default async function handler(req, res) {
     console.error(error.message);
     res.status(500).send(error.message);
   } finally {
-    await client.close();
-    console.log(`db client closed!`);
     console.log(`END | METHOD: ${method} | REQUEST: ${request}`);
   }
 }

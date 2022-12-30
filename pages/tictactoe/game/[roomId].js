@@ -1,6 +1,7 @@
 import TicTacToeGame from "../../../components/TicTacToeComponent";
 import LoadingScreen from "../../../components/LoadingScreenComponent.js";
 import { useState } from "react";
+import { connectToDatabase } from "../../../functions/mongoDB";
 
 export default function App(props) {
   const [loading, setLoading] = useState(false);
@@ -26,11 +27,9 @@ export async function getServerSideProps(context) {
     };
   }
   //connect to server
-  const { MongoClient } = require("mongodb");
-  const uri = process.env.DB_URI;
-  const client = new MongoClient(uri);
+  let client;
   try {
-    await client.connect();
+    client = await connectToDatabase();
   } catch (error) {
     console.error("Could not connect to MongoClient");
     return {
@@ -45,8 +44,6 @@ export async function getServerSideProps(context) {
   const room = await collection
     .findOne({ _id: roomId })
     .catch((err) => console.error(err));
-  //disconnect from DB
-  await client.close();
   //if room is not found, return 404
   if (!room)
     return {
