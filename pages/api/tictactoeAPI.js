@@ -1,4 +1,4 @@
-import { connectToDatabase } from "../../functions/mongoDB";
+import { clientPromise } from "../../functions/mongoDB";
 var crypto = require("crypto");
 const util = require("util");
 
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   console.log(`START | METHOD: ${method} | REQUEST: ${request}`);
 
   try {
-    client = await connectToDatabase();
+    client = await clientPromise();
   } catch (error) {
     console.error("Could not connect to MongoClient");
     res.status(500).send("Could not connect to database");
@@ -191,6 +191,8 @@ async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares) {
 
 async function handleListener(coll, roomId, timeOutInMs = 30000) {
   try {
+    const room = await coll.findOne({ _id: roomId });
+    if (!room) throw new Error(`room ${roomId} not found!`);
     //specify what to filter for. Use tge console.next to see what objects are
     const pipeline = [{ $match: { "documentKey._id": roomId } }];
     //create changeStream object
