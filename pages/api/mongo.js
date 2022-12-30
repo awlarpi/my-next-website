@@ -1,8 +1,8 @@
-import { connectToDatabase } from "../../functions/mongoDB";
+import { clientPromise } from "../../functions/mongoDB";
 
 export default async function handler(req, res) {
   try {
-    const client = await connectToDatabase();
+    const client = await clientPromise();
     const db = client.db("sample_mflix");
     const coll = db.collection("movies");
 

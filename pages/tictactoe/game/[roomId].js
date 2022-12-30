@@ -29,7 +29,7 @@ export async function getServerSideProps(context) {
   //connect to server
   let client;
   try {
-    client = await connectToDatabase();
+    client = await clientPromise();
   } catch (error) {
     console.error("Could not connect to MongoClient");
     return {
