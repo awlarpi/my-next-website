@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { connectToDatabase } from "../../functions/mongoDB";
-=======
-import { clientPromise } from "../../functions/mongoDB";
->>>>>>> f2a9c0e8fcdc74da14f87428d17c94ea1ba807ea
 
 export default async function handler(req, res) {
   try {
