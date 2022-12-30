@@ -5,6 +5,7 @@ import { delay } from "../../functions/utils";
 
 export default async function handler(req, res) {
   const { roomId, request, Latest_Move } = req.query;
+  const { Squares } = req.body;
   const method = req.method;
   const uri = process.env.DB_URI;
   const client = new MongoClient(uri);
@@ -44,20 +45,21 @@ export default async function handler(req, res) {
       } catch (error) {
         res.status(400).send(error.message);
       }
-    } else if (method === "GET" && request === "updateAndListen") {
+    } else if (method === "PUT" && request === "updateAndListen") {
       try {
         const latestMoveObject = await handleUpdateAndListen(
           coll,
           roomId,
-          Latest_Move
+          Latest_Move,
+          Squares
         );
         res.status(200).send(latestMoveObject);
       } catch (error) {
         res.status(400).send(error.message);
       }
-    } else if (method === "POST") {
+    } else if (method === "PUT" && request === "update") {
       try {
-        const data = await handleUpdate(coll, roomId, Latest_Move);
+        const data = await handleUpdate(coll, roomId, Latest_Move, Squares);
         res.status(200).send(data);
       } catch (error) {
         res.status(400).send(error.message);
@@ -108,7 +110,7 @@ async function handleJoinRequest(coll, roomId) {
     return { playerId: player2Id };
   } catch (error) {
     console.error(error.message);
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -128,10 +130,11 @@ async function handleCreateRoom(coll) {
       _id: newRoomId,
       Latest_Move: null,
       Room_Full: false,
-      Player1_Start_First: player1StartFirst,
+      Is_Player1_Turn: player1StartFirst,
       Rematch: false,
       Player1_ID: player1Id,
       Player2_ID: null,
+      Squares: Array(9).fill(null),
     };
     //generate new room with new room ID
     await coll.insertOne(roomDocument);
@@ -148,12 +151,12 @@ async function handleCreateRoom(coll) {
 }
 
 //runs when user makes a move
-async function handleUpdate(coll, roomId, Latest_Move) {
+async function handleUpdate(coll, roomId, Latest_Move, Squares) {
   try {
     console.log(`updating room ${roomId}...`);
     const response = await coll.updateOne(
       { _id: roomId },
-      { $set: { Latest_Move: Latest_Move } }
+      { $set: { Latest_Move: Latest_Move, Squares: Squares } }
     );
     //console.log(`response: ${util.inspect(response)}`);
     if (!response.matchedCount) throw new Error("Room ID not matched!");
@@ -162,7 +165,7 @@ async function handleUpdate(coll, roomId, Latest_Move) {
     return `room ${roomId} updated successfully!`;
   } catch (error) {
     console.error(error.message);
-    throw new Error(error);
+    throw error;
   }
 }
 
@@ -174,42 +177,84 @@ async function handleDeleteRoom(coll, roomId) {
     return `room ${roomId} deleted successfully!`;
   } catch (error) {
     console.error(error.message);
-    throw new Error(error);
+    throw error;
   }
 }
 
-async function handleListener(coll, roomId) {
+async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares) {
+  try {
+    await handleUpdate(coll, roomId, Latest_Move, Squares);
+    const latestMoveObject = await handleListener(coll, roomId);
+    return latestMoveObject;
+  } catch (error) {
+    console.error(error.message);
+    throw error;
+  }
+}
+
+async function handleListener(coll, roomId, timeOutInMs = 30000) {
   try {
     //specify what to filter for. Use tge console.next to see what objects are
-    const pipeline = [
-      {
-        $match: {
-          operationType: "update",
-          "documentKey._id": roomId,
-        },
-      },
-    ];
+    const pipeline = [{ $match: { "documentKey._id": roomId } }];
     //create changeStream object
-    const change = await monitorRoomWithHasNext(coll, 10000, pipeline);
+    const change = await monitorRoomWithHasNext(coll, timeOutInMs, pipeline);
     const Latest_Move = change.Latest_Move;
     //return latest state of squares
     console.log(`sending latest move: ${JSON.stringify(Latest_Move)}`);
     return { Latest_Move: Latest_Move };
   } catch (error) {
     console.error(error.message);
-    throw new Error("Failed to fetch opponent move!");
+    await handleDeleteRoom(coll, roomId);
+    throw error;
   }
 }
 
-async function handleUpdateAndListen(coll, roomId, Latest_Move) {
+async function monitorRoomWithHasNext(coll, timeOutInMs, pipeline) {
+  console.log(`opening changeStream using hasNext...`);
+  const changeStream = coll.watch(pipeline, { fullDocument: "updateLookup" });
+  let change = { Room_Full: false };
   try {
-    await handleUpdate(coll, roomId, Latest_Move);
-    const latestMoveObject = await handleListener(coll, roomId);
-    return latestMoveObject;
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("timeout!"));
+      }, timeOutInMs);
+    });
+    // stays in loop for as long as the change object contains Room_Full., preventing room join requests from stopping the loop
+    // if next.operation type === "delete" then break out of loop
+    while (Object.hasOwn(change, "Room_Full")) {
+      //wait for next change until change occurs
+      const next = await Promise.race([changeStream.next(), timeoutPromise]);
+      if (next.operationType === "delete") throw new Error("room deleted!");
+      change = next.updateDescription.updatedFields;
+    }
+    //console.log(`next: ${util.inspect(next)}`);
+    console.log(`received a change to room: ${JSON.stringify(change)}`);
+    changeStream.close();
+    console.log(`changeStream is now closed!`);
+    return change;
   } catch (error) {
-    console.error(error.message);
-    throw new Error("Failed to update and listen for opponent move!");
+    if (error.message === "timeout!") {
+      console.error(`time out! closing change stream...`);
+      changeStream.close();
+      throw new Error("timeout!");
+    } else if (error.message === "room deleted!") {
+      console.error(`room deleted! closing change stream...`);
+      changeStream.close();
+      throw new Error("room deleted!");
+    } else {
+      throw new Error(error);
+    }
   }
+}
+
+function closeChangeStream(timeInMs, changeStream) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log("time out! closing the change stream...");
+      changeStream.close();
+      resolve();
+    }, timeInMs);
+  });
 }
 
 async function monitorRoomWithEventEmitter(coll, timeOutInMs, pipeline) {
@@ -227,45 +272,4 @@ async function monitorRoomWithEventEmitter(coll, timeOutInMs, pipeline) {
   });
 
   return change;
-}
-
-async function monitorRoomWithHasNext(coll, timeOutInMs, pipeline) {
-  console.log(`opening changeStream using hasNext...`);
-
-  const changeStream = coll.watch(pipeline, { fullDocument: "updateLookup" });
-  //closeChangeStream(timeOutInMs, changeStream);
-
-  let latestMove, change;
-
-  try {
-    // breaks out of loop when changeStream is closed
-    while (latestMove === undefined || latestMove === null) {
-      //wait for next change until change occurs
-      const next = await changeStream.next();
-      latestMove = next.fullDocument.Latest_Move;
-      change = next.updateDescription.updatedFields;
-    }
-    //console.log(`next: ${util.inspect(next)}`);
-    console.log(`received a change to room: ${JSON.stringify(change)}`);
-    changeStream.close();
-    console.log(`changeStream is now closed!`);
-    return change;
-  } catch (error) {
-    if (error.message === "ChangeStream is closed") {
-      console.log(`time out! change: ${JSON.stringify(change)}`);
-      return change;
-    } else {
-      throw error;
-    }
-  }
-}
-
-function closeChangeStream(timeInMs, changeStream) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log("time out! closing the change stream...");
-      changeStream.close();
-      resolve();
-    }, timeInMs);
-  });
 }

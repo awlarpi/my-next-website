@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import style from "../styles/Game.module.css";
 import Head from "next/head";
+import ErrorPage from "next/error";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { bestBotMove, getResult } from "../functions/tictactoeBot";
@@ -17,28 +18,45 @@ import {
   indexToPositionList,
   allAreNull,
 } from "../functions/utils";
+const util = require("util");
 
-export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
+export default function TicTacToeGame({
+  onlineMode,
+  roomId,
+  startFirst,
+  Squares,
+  propIsOpponentTurn,
+  propCurrentSymbol,
+}) {
   const router = useRouter();
-  const [squares, setSquares] = useState(Array(9).fill(null));
+  const [error, setError] = useState(null);
   const [theme, setTheme] = useState(null);
+  const [squares, setSquares] = useState(
+    onlineMode ? Squares : Array(9).fill(null)
+  );
   const [isSinglePlayer, setIsSinglePlayer] = useState(
     onlineMode ? false : true
   );
   const [isOpponentTurn, setIsOpponentTurn] = useState(
-    onlineMode ? !startFirst : Math.random() < 0.5
+    onlineMode ? propIsOpponentTurn : Math.random() < 0.5
   );
   const resultRef = useRef(null);
-  const playerRef = useRef("X");
-  const squaresRef = useRef(squares);
+  const playerRef = useRef(onlineMode ? propCurrentSymbol : "X");
+  const squaresRef = useRef(onlineMode ? Squares : Array(9).fill(null));
   const myMoveRef = useRef(null);
 
   useEffect(() => {
     console.log("roomId: " + roomId);
-    const handleOnlineModeSecondPlayer = async () => {
+    const handleListenForMove = async () => {
       await listenForOpponentMove();
     };
-    if (onlineMode && !startFirst) handleOnlineModeSecondPlayer();
+    //if online mode and playing as "O" and opponent has not made a move before I joined
+    if (onlineMode && allAreNull(squares) && isOpponentTurn) {
+      console.log(
+        "case zero; start of game, playing second and opponent has not made a move:"
+      );
+      handleListenForMove();
+    }
     setTheme(
       window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
@@ -63,24 +81,23 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
         return;
       }
       //Online mode
+      //if gameOver
       if (resultRef.current) {
-        //if gameOver
-        console.log("case one; game over: updating my move...");
-        onResultTrue();
+        console.log("case one; game over:");
+        //if I made the winning move
+        if (isOpponentTurn) {
+          console.log(" updating my move...");
+          onResultTrue();
+          return;
+        }
         return;
-      } else if (!startFirst && allAreNull(squares)) {
+      } else if (myMoveRef.current === null && !startFirst) {
         console.log(
-          "case two; is beginning and is opponent turn: skip sending my move..."
+          "case two; Start of game and I am second player. I have not made any moves yet. skip sending my move..."
         );
         return;
       } else if (isOpponentTurn) {
-        console.log({
-          squares: squares,
-          allAreNull: allAreNull(squares),
-        });
-        console.log(
-          "case three; past beginning and is opponent turn: updating and listening..."
-        );
+        console.log("case three; is opponent turn: updating and listening...");
         handleOnlineModeMove();
         return;
       } else {
@@ -96,29 +113,30 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
     console.log("2. Update and listen to room: " + roomId);
     try {
       //update board in database
-      const response = await axios.get("/api/tictactoeAPI", {
-        params: {
-          roomId: roomId,
-          request: "updateAndListen",
-          Latest_Move: myMoveRef.current,
-        },
-      });
+      const response = await axios.put(
+        "/api/tictactoeAPI",
+        { Squares: squaresRef.current },
+        {
+          params: {
+            roomId: roomId,
+            request: "updateAndListen",
+            Latest_Move: myMoveRef.current,
+          },
+        }
+      );
       const opponentMove = response.data.Latest_Move;
-
       console.log(`3. Successfully retrieved opponent move: ${opponentMove}`);
       await delay(100);
-
       onIndexUpdate(opponentMove);
       setIsOpponentTurn(false);
-    } catch (err) {
-      console.error("3. Failed to update database!");
+    } catch (error) {
+      errorHandler(error);
     }
   }
 
   async function listenForOpponentMove() {
     try {
       console.log("4. Listening for opponent move...");
-
       //get using the listenForOpponentMove request
       const response = await axios.get("/api/tictactoeAPI", {
         params: {
@@ -126,15 +144,13 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
           request: "listenForOpponentMove",
         },
       });
-
       const opponentMove = response.data.Latest_Move;
-
       console.log(`5. Successfully retrieved opponent move: ${opponentMove}`);
       await delay(100);
       onIndexUpdate(opponentMove);
       setIsOpponentTurn(false);
     } catch (error) {
-      console.error("5. Failed to fetch opponent move");
+      errorHandler(error);
     }
   }
 
@@ -142,17 +158,37 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
     console.log("2. Updating my move to roomId: " + roomId);
     try {
       //update board in database
-      await axios.post("/api/tictactoeAPI", null, {
-        params: {
-          roomId: roomId,
-          Latest_Move: myMoveRef.current,
-        },
-      });
+      await axios.put(
+        "/api/tictactoeAPI",
+        { Squares: squaresRef.current },
+        {
+          params: {
+            roomId: roomId,
+            request: "updateAndListen",
+            Latest_Move: myMoveRef.current,
+          },
+        }
+      );
       console.log(`3. Successfully updated database!`);
-    } catch (err) {
-      console.error("3. Failed to update database!");
+    } catch (error) {
+      errorHandler(error);
     }
   }
+
+  const errorHandler = (error) => {
+    console.error(error);
+    if (error.response.data === "timeout!") {
+      setError(error.response.status);
+      if (!isOpponentTurn)
+        alert("Opponent took too long, connection timed out!");
+    } else if (error.response.data === "room deleted!") {
+      setError(error.response.status);
+      alert("Room deleted!");
+    } else {
+      setError(500);
+      alert("Room deleted!");
+    }
+  };
 
   function handleTileClick(index) {
     if (squares[index]) return; //return if tile is full  already
@@ -226,6 +262,8 @@ export default function TicTacToeGame({ onlineMode, roomId, startFirst }) {
     }
     router.back();
   }
+
+  if (error) return <ErrorPage statusCode={error} />;
 
   return (
     <>
@@ -394,12 +432,12 @@ function onlineCurrentPlayerText(result, currentPlayer, startFirst) {
   if (result) return winnerText(result.winner);
   if (startFirst) {
     //player is playing as X
-    if (currentPlayer === "X") return `Player X, your move!`;
-    return `Waiting for opponent to make a move...`;
+    if (currentPlayer === "X") return `Player X : Your turn!`;
+    return `Player X : Opponent's turn!`;
   }
   //player is playing as O
-  if (currentPlayer === "O") return `Player O, your move!`;
-  return `Waiting for opponent to make a move...`;
+  if (currentPlayer === "O") return `Player O : Your turn!`;
+  return `Player O : Opponent's turn!`;
 }
 
 function winnerText(winner) {

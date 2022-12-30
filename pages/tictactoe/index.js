@@ -73,8 +73,8 @@ const JoinGameForm = () => {
       const response = await axios.get(`/api/tictactoeAPI`, {
         params: { roomId: roomId, request: "joinRoom" },
       });
-      console.log(response.data);
       const { playerId } = response.data;
+      console.log(`Joined room ${roomId}!`);
       //direct user to room
       router.push({
         pathname: "tictactoe/game/[roomId]",
@@ -84,8 +84,8 @@ const JoinGameForm = () => {
         },
       });
     } catch (error) {
-      console.error(error.response.data);
-      setErrorMessage(error.response.data);
+      console.error(error);
+      setErrorMessage(error);
     }
   };
 

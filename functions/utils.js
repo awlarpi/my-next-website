@@ -22,8 +22,24 @@ function isXTurn(p) {
   return p === "X" && true;
 }
 
-function allAreNull(arr) {
-  return arr.every((element) => element === null);
+function allAreNull(obj) {
+  let bool = true;
+  for (const property in obj) {
+    if (obj[property] !== null) bool = false;
+  }
+  return bool;
 }
 
-export { delay, randomBoolean, indexToPositionList, isXTurn, allAreNull };
+function numberOfNullElements(array) {
+  let count = 0;
+  array.forEach((element) => (element === null ? count++ : count));
+}
+
+export {
+  delay,
+  randomBoolean,
+  indexToPositionList,
+  isXTurn,
+  allAreNull,
+  numberOfNullElements,
+};

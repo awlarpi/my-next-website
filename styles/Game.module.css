@@ -83,11 +83,11 @@
 }
 
 .roomId {
-  position: absolute;
+  position: fixed;
   top: 1vh;
-  left: 25%;
   font-size: 25px;
   opacity: 100%;
+  justify-self: center;
 }
 
 .themeSelector {
