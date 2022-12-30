@@ -120,7 +120,6 @@ async function handleCreateRoom(coll) {
     console.log(`creating new room...`);
     //generate new unique room ID, add room ID to the list of occupied rooms
     const newRoomId = crypto.randomBytes(2).toString("hex");
-    console.log(`new room ID: ${newRoomId}, type: ${typeof newRoomId}`);
     //generate new unique player ID
     const player1Id = crypto.randomBytes(10).toString("hex");
     // select who starts first
@@ -128,6 +127,8 @@ async function handleCreateRoom(coll) {
     //new room data
     const roomDocument = {
       _id: newRoomId,
+      timestamp: new Date(),
+      metadata: { game: "tictactoe", type: "game room" },
       Latest_Move: null,
       Room_Full: false,
       Is_Player1_Turn: player1StartFirst,

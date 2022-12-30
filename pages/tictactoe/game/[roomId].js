@@ -1,7 +1,6 @@
 import TicTacToeGame from "../../../components/TicTacToeComponent";
 import LoadingScreen from "../../../components/LoadingScreenComponent.js";
 import { useState } from "react";
-import { numberOfNullElements } from "../../../functions/utils";
 
 export default function App(props) {
   const [loading, setLoading] = useState(false);
