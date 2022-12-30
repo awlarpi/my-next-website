@@ -127,6 +127,7 @@ export default function TicTacToeGame({
       const opponentMove = response.data.Latest_Move;
       console.log(`3. Successfully retrieved opponent move: ${opponentMove}`);
       onIndexUpdate(opponentMove);
+      if (resultRef.current) return;
       setIsOpponentTurn(false);
     } catch (error) {
       errorHandler(error);
@@ -192,7 +193,7 @@ export default function TicTacToeGame({
     if (squares[index]) return; //return if tile is full  already
     myMoveRef.current = index;
     if (!onlineMode) {
-      if (resultRef.current || squares[index]) return; //return if gameOver or tile is clicked already
+      if (resultRef.current) return; //return if gameOver or tile is clicked already
       onIndexUpdate(index);
       //handle everything and swap players
       if (resultRef.current || !isSinglePlayer) return; //if gameOver or is double player
