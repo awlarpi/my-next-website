@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       }
     } else if (method === "GET" && request === "listenForOpponentMove") {
       try {
-        const response = await handleListener(coll, roomId);
+        const response = await handleListener(coll, roomId, res);
         res.status(200).send(response);
       } catch (error) {
         res.status(400).send(error.message);
@@ -49,7 +49,8 @@ export default async function handler(req, res) {
           coll,
           roomId,
           Latest_Move,
-          Squares
+          Squares,
+          res
         );
         res.status(200).send(latestMoveObject);
       } catch (error) {
@@ -178,7 +179,7 @@ async function handleDeleteRoom(coll, roomId) {
   }
 }
 
-async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares) {
+async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares, res) {
   try {
     await handleUpdate(coll, roomId, Latest_Move, Squares);
     const latestMoveObject = await handleListener(coll, roomId);
@@ -189,7 +190,7 @@ async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares) {
   }
 }
 
-async function handleListener(coll, roomId, timeOutInMs = 30000) {
+async function handleListener(coll, roomId, res, timeOutInMs = 9876) {
   try {
     //specify what to filter for. Use tge console.next to see what objects are
     const pipeline = [{ $match: { "documentKey._id": roomId } }];
