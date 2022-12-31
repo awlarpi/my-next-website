@@ -4,6 +4,7 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { useDarkMode } from "usehooks-ts";
+import Head from "next/head";
 
 export default function Home() {
   const { isDarkMode, toggle, enable, disable } = useDarkMode();
@@ -30,29 +31,56 @@ export default function Home() {
   };
 
   return (
-    <main
-      className={`${styles.landingMain} ${
-        styles[isDarkMode ? "dark" : "light"]
-      }`}
-    >
-      <button className={styles.themeSelector} onClick={toggle}></button>
+    <>
+      <Head>
+        <title>Play Tic Tac Toe Online | Multiplayer Strategy Game</title>
+        <meta
+          property="og:title"
+          content="Play Tic Tac Toe Online | Multiplayer Strategy Game"
+          key="title"
+        />
+        <meta
+          name="description"
+          content="Challenge friends or play against the computer in this classic strategy game. Play Tic Tac Toe online now!"
+        />
+        <meta
+          property="og:description"
+          content="Challenge friends or play against the computer in this classic strategy game. Play Tic Tac Toe online now!"
+          key="description"
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="keywords"
+          context="tic tac toe, online, multiplayer, strategy, game"
+        />
+      </Head>
+      <main
+        className={`${styles.landingMain} ${
+          styles[isDarkMode ? "dark" : "light"]
+        }`}
+      >
+        <button className={styles.themeSelector} onClick={toggle}></button>
 
-      <div className={styles.landingMenu}>
-        <a className={styles.landingMenuItem} onClick={handleOnlineModeClick}>
-          <h2>
-            Create new game room!<span>-&gt;</span>
-          </h2>
-        </a>
+        <div className={styles.landingMenu}>
+          <a className={styles.landingMenuItem} onClick={handleOnlineModeClick}>
+            <h2>
+              Create new game room!<span>-&gt;</span>
+            </h2>
+          </a>
 
-        <JoinGameForm />
+          <JoinGameForm />
 
-        <Link className={styles.landingMenuItem} href="/tictactoe/game/offline">
-          <h2>
-            Play Offline!<span>-&gt;</span>
-          </h2>
-        </Link>
-      </div>
-    </main>
+          <Link
+            className={styles.landingMenuItem}
+            href="/tictactoe/game/offline"
+          >
+            <h2>
+              Play Offline!<span>-&gt;</span>
+            </h2>
+          </Link>
+        </div>
+      </main>
+    </>
   );
 }
 
