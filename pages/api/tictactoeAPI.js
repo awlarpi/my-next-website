@@ -1,25 +1,23 @@
-import { MongoClient } from "mongodb";
+import { clientPromise } from "../../functions/mongoDB";
 var crypto = require("crypto");
 const util = require("util");
-import { delay } from "../../functions/utils";
 
 export default async function handler(req, res) {
   const { roomId, request, Latest_Move } = req.query;
   const { Squares } = req.body;
   const method = req.method;
-  const uri = process.env.DB_URI;
-  const client = new MongoClient(uri);
+  let client = null;
 
   console.log(`START | METHOD: ${method} | REQUEST: ${request}`);
+
   try {
-    await client.connect();
+    client = await clientPromise();
   } catch (error) {
     console.error("Could not connect to MongoClient");
     res.status(500).send("Could not connect to database");
     return;
   }
 
-  console.log("db client connected!");
   const database = client.db("tictactoe");
   const coll = database.collection("rooms");
 
@@ -45,6 +43,13 @@ export default async function handler(req, res) {
       } catch (error) {
         res.status(400).send(error.message);
       }
+    } else if (method === "GET" && request === "ping") {
+      try {
+        const pingData = await handlePing(coll, roomId);
+        res.status(200).send(pingData);
+      } catch (error) {
+        res.status(400).send(error.message);
+      }
     } else if (method === "PUT" && request === "updateAndListen") {
       try {
         const latestMoveObject = await handleUpdateAndListen(
@@ -64,7 +69,7 @@ export default async function handler(req, res) {
       } catch (error) {
         res.status(400).send(error.message);
       }
-    } else if (method === "DELETE") {
+    } else if (method === "DELETE" && request === "delete") {
       try {
         const response = await handleDeleteRoom(coll, roomId);
         res.status(200).send(response);
@@ -79,9 +84,21 @@ export default async function handler(req, res) {
     console.error(error.message);
     res.status(500).send(error.message);
   } finally {
-    await client.close();
-    console.log(`db client closed!`);
     console.log(`END | METHOD: ${method} | REQUEST: ${request}`);
+  }
+}
+
+async function handlePing(coll, roomId) {
+  try {
+    console.log(`searching for room ${roomId}...`);
+    //request for room
+    const room = await coll.findOne({ _id: roomId });
+    if (!room) throw new Error("room deleted!");
+    const { Latest_Move, Rematch } = room;
+    return { Latest_Move: Latest_Move, Rematch: Rematch };
+  } catch (error) {
+    console.error(error.message);
+    throw error;
   }
 }
 
@@ -127,9 +144,8 @@ async function handleCreateRoom(coll) {
     //new room data
     const roomDocument = {
       _id: newRoomId,
-      timestamp: new Date(),
-      metadata: { game: "tictactoe", type: "game room" },
-      Latest_Move: null,
+      createdAt: new Date(),
+      Latest_Move: -1,
       Room_Full: false,
       Is_Player1_Turn: player1StartFirst,
       Rematch: false,
@@ -182,7 +198,7 @@ async function handleDeleteRoom(coll, roomId) {
   }
 }
 
-async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares) {
+async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares, res) {
   try {
     await handleUpdate(coll, roomId, Latest_Move, Squares);
     const latestMoveObject = await handleListener(coll, roomId);
@@ -193,8 +209,10 @@ async function handleUpdateAndListen(coll, roomId, Latest_Move, Squares) {
   }
 }
 
-async function handleListener(coll, roomId, timeOutInMs = 30000) {
+async function handleListener(coll, roomId, timeOutInMs = 9876) {
   try {
+    const room = await coll.findOne({ _id: roomId });
+    if (!room) throw new Error(`room ${roomId} not found!`);
     //specify what to filter for. Use tge console.next to see what objects are
     const pipeline = [{ $match: { "documentKey._id": roomId } }];
     //create changeStream object
@@ -237,7 +255,7 @@ async function monitorRoomWithHasNext(coll, timeOutInMs, pipeline) {
     if (error.message === "timeout!") {
       console.error(`time out! closing change stream...`);
       changeStream.close();
-      throw new Error("timeout!");
+      throw new Error("Request exceeded runtime limit!");
     } else if (error.message === "room deleted!") {
       console.error(`room deleted! closing change stream...`);
       changeStream.close();
