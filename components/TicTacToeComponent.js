@@ -67,9 +67,9 @@ export default function TicTacToeGame({
         console.log(
           `received opponent move: ${Latest_Move}. updating game state...`
         );
-
         //update game state
         onIndexUpdate(Latest_Move);
+        if (resultRef.current) return;
         latestMoveRef.current = Latest_Move;
         setIsOpponentTurn(false);
       } catch (error) {
@@ -274,9 +274,9 @@ export default function TicTacToeGame({
   function onIndexUpdate(index) {
     const newSquares = [...squaresRef.current];
     newSquares[index] = playerRef.current;
+    resultRef.current = getResult(newSquares);
     updateSquares(newSquares);
     swapPlayers();
-    resultRef.current = getResult(newSquares);
   }
   function handleBackClick() {
     router.back();
