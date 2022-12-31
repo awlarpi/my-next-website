@@ -25,6 +25,18 @@
     position: relative;
     bottom: 4%;
   }
+  .landingMenu {
+    width: 85vw;
+    font-size: 5vw;
+    padding: 3vw;
+    margin: 3vw;
+  }
+  .joinButton {
+    margin-top: 3vw;
+    font-size: x-small;
+    width: 12vw;
+    height: 8vw;
+  }
 }
 
 @media (orientation: landscape) {
@@ -41,6 +53,18 @@
   .appear {
     position: relative;
     bottom: 4.5%;
+  }
+  .landingMenu {
+    width: 70vh;
+    font-size: 4vh;
+    padding: 2vh;
+    margin: 2vh;
+  }
+  .joinButton {
+    margin-top: 2.2vh;
+    font-size: x-small;
+    width: 12vh;
+    height: 6vh;
   }
 }
 
@@ -63,12 +87,17 @@
   .light .square:hover {
     background-color: rgb(237, 237, 237);
   }
+  .joinButton:hover {
+    background-color: #f08;
+  }
+  .landingMenuItem:hover {
+    background-color: #0ab;
+  }
 }
 
 .landingMain {
   display: flex;
   flex-direction: column;
-  /* add this style */
   align-items: center;
   text-align: center;
   height: 100vh;
@@ -83,16 +112,9 @@
   align-items: center;
 }
 
-.landingMenu h2 {
-  font-size: 40px;
-  line-height: 28px;
-}
-
 .landingMenuItem {
+  width: inherit;
   display: flex;
-  width: 450px;
-  padding: 25px;
-  margin: 25px;
   border: 2px solid;
   border-color: inherit;
   border-radius: 10px;
@@ -101,14 +123,14 @@
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  font-size: large;
+  font-size: inherit;
+  padding: inherit;
+  margin: inherit;
 }
 
 .landingForm {
-  padding-top: 15px;
+  width: inherit;
   font-size: large;
-  width: 450px;
-  padding-bottom: 12px;
   border: 2px solid;
   border-radius: 10px;
   text-decoration: none;
@@ -118,16 +140,14 @@
   flex-direction: column;
   align-items: center;
   font-size: inherit;
-}
-
-.landingMenuItem:hover {
-  background-color: lightgray;
+  padding: inherit;
+  margin: inherit;
 }
 
 .landingLabel,
 .landingInput {
   margin-top: 0%;
-  margin: 10px;
+  margin: px;
   background-color: inherit;
   color: inherit;
   font-size: inherit;
@@ -136,30 +156,31 @@
   margin-bottom: 10px;
 }
 .landingInput {
-  margin-top: 15px;
+  font-size: inherit;
+  margin-top: 8px;
   border-style: dashed;
   border-color: inherit;
   font-family: inherit;
   font-style: normal;
-  font-size: 25px;
-  line-height: 28px;
+  font-size: inherit;
+  line-height: 1px;
   padding: 5px;
+  padding-bottom: 2px;
 }
 .landingInput:focus {
   outline: none;
 }
 
 .joinButton {
-  margin-top: 3px;
-  width: 13%;
-  font-size: inherit;
+  margin: inherit 0px 5px 0px;
   font-family: inherit;
   background-color: inherit;
   color: inherit;
-  border: 2px solid;
+  border: 2px;
+  border-style: groove;
   cursor: pointer;
-  font-size: 20px;
-  line-height: 25px;
+  font-size: inherit;
+  line-height: 1px;
 }
 
 .errorMessage {
