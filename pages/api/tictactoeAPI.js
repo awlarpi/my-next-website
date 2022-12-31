@@ -1,4 +1,5 @@
 import { clientPromise } from "../../functions/mongoDB";
+import { useInterval } from "../../functions/useInterval";
 var crypto = require("crypto");
 const util = require("util");
 
@@ -43,6 +44,13 @@ export default async function handler(req, res) {
       } catch (error) {
         res.status(400).send(error.message);
       }
+    } else if (method === "GET" && request === "ping") {
+      try {
+        const pingData = await handlePing(coll, roomId);
+        res.status(200).send(pingData);
+      } catch (error) {
+        res.status(400).send(error.message);
+      }
     } else if (method === "PUT" && request === "updateAndListen") {
       try {
         const latestMoveObject = await handleUpdateAndListen(
@@ -78,6 +86,20 @@ export default async function handler(req, res) {
     res.status(500).send(error.message);
   } finally {
     console.log(`END | METHOD: ${method} | REQUEST: ${request}`);
+  }
+}
+
+async function handlePing(coll, roomId) {
+  try {
+    console.log(`searching for room ${roomId}...`);
+    //request for room
+    const room = await coll.findOne({ _id: roomId });
+    if (!room) throw new Error("room deleted!");
+    const { Latest_Move, Rematch } = room;
+    return { Latest_Move: Latest_Move, Rematch: Rematch };
+  } catch (error) {
+    console.error(error.message);
+    throw error;
   }
 }
 
@@ -123,9 +145,7 @@ async function handleCreateRoom(coll) {
     //new room data
     const roomDocument = {
       _id: newRoomId,
-      timestamp: new Date(),
-      metadata: { game: "tictactoe", type: "game room" },
-      Latest_Move: null,
+      Latest_Move: -1,
       Room_Full: false,
       Is_Player1_Turn: player1StartFirst,
       Rematch: false,

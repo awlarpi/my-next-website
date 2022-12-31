@@ -7,16 +7,10 @@ export default async function handler(req, res) {
     const coll = db.collection("movies");
 
     const movies = await coll
-      .find({})
+      .find({}, { projection: { _id: 0 } })
       .sort({ metacritic: -1 })
       .limit(20)
       .toArray();
-
-    const list = movies.map((movie) => ({
-      title: movie.title,
-      metacritic: movie.metacritic,
-      plot: movie.plot,
-    }));
 
     res.status(200).send(list);
   } catch (e) {
