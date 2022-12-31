@@ -14,7 +14,12 @@ import {
   IsSinglePlayerContext,
   OnlineModeContext,
 } from "../contexts/TicTacToeContext";
-import { delay, randomBoolean, indexToPositionList } from "../functions/utils";
+import {
+  delay,
+  randomBoolean,
+  indexToPositionList,
+  deleteRoom,
+} from "../functions/utils";
 const util = require("util");
 
 export default function TicTacToeGame({
@@ -43,40 +48,38 @@ export default function TicTacToeGame({
   const myMoveRef = useRef(-1);
   const latestMoveRef = useRef(-1);
 
+  useEffect(() => {
+    // Send a delete request to your API when the component unmounts
+    return async () => {
+      if (onlineMode) await deleteRoom(roomId);
+    };
+  }, [roomId, onlineMode]);
+
   useInterval(
     async function () {
-      let { Latest_Move } = await pingRoom();
-      Latest_Move = parseInt(Latest_Move);
+      try {
+        const response = await pingRoom();
+        console.log(response);
+        const Latest_Move = parseInt(response.Latest_Move);
 
-      //if not change, continue pinging the room
-      if (Latest_Move === latestMoveRef.current) return;
+        //if not change, continue pinging the room
+        if (Latest_Move === latestMoveRef.current) return;
 
-      console.log(
-        `received opponent move: ${Latest_Move}. updating game state...`
-      );
+        console.log(
+          `received opponent move: ${Latest_Move}. updating game state...`
+        );
 
-      //update game state
-      onIndexUpdate(Latest_Move);
-      latestMoveRef.current = Latest_Move;
-      setIsOpponentTurn(false);
+        //update game state
+        onIndexUpdate(Latest_Move);
+        latestMoveRef.current = Latest_Move;
+        setIsOpponentTurn(false);
+      } catch (error) {
+        console.error(error);
+      }
     },
     // Delay in milliseconds or null to stop it
-    !onlineMode || resultRef.current || !isOpponentTurn ? null : 1000
+    !onlineMode || resultRef.current || !isOpponentTurn || error ? null : 1000
   );
-
-  /*
-  useEffect(() => {
-    console.log("roomId: " + roomId);
-    //if online mode and playing as "O" and opponent has not made a move before I joined
-    if (onlineMode && allAreNull(squares) && isOpponentTurn) {
-      console.log(
-        "case zero; start of game, playing second and opponent has not made a move:"
-      );
-      handleListenForMove();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  */
 
   useEffect(
     () => {
@@ -131,7 +134,7 @@ export default function TicTacToeGame({
       if (resultRef.current) return;
       setIsOpponentTurn(false);
     } catch (error) {
-      if (e.hasOwnProperty(response)) errorHandler(e.response.data);
+      if ("response" in e) errorHandler(e.response.data);
       else errorHandler(e);
     }
   }
@@ -151,7 +154,7 @@ export default function TicTacToeGame({
       onIndexUpdate(opponentMove);
       setIsOpponentTurn(false);
     } catch (error) {
-      if (e.hasOwnProperty(response)) errorHandler(e.response.data);
+      if ("response" in e) errorHandler(e.response.data);
       else errorHandler(e);
     }
   }
@@ -166,7 +169,7 @@ export default function TicTacToeGame({
       });
       return response.data;
     } catch (e) {
-      if (e.hasOwnProperty(response)) errorHandler(e.response.data);
+      if ("response" in e) errorHandler(e.response.data);
       else errorHandler(e);
     }
   }
@@ -188,24 +191,30 @@ export default function TicTacToeGame({
       );
       console.log(`3. Successfully updated database!`);
     } catch (e) {
-      console.error(e);
-      if (e.hasOwnProperty(response)) errorHandler(e.response.data);
+      if ("response" in e) errorHandler(e.response.data);
       else errorHandler(e);
     }
   }
 
   const errorHandler = (error) => {
     console.error(error);
-    if (error.message === "timeout!") {
-      setError(408);
-      if (!isOpponentTurn)
-        alert("Opponent took too long, connection timed out!");
-    } else if (error.message === "room deleted!") {
-      setError(404);
-      alert("Room deleted!");
-    } else {
-      setError(error);
-      alert("Error!");
+    switch (error.message) {
+      case "timeout!":
+        setError({ status: 408, message: error.message });
+        if (!isOpponentTurn)
+          alert("Error! Opponent took too long, connection timed out!");
+        break;
+      case "room deleted!":
+        setError({ status: 404, message: error.message });
+        alert("Room deleted!");
+        break;
+      case "Error! Opponent left the game!":
+        setError({ status: 404, message: error.message });
+        alert("Error! Opponent left the game!");
+      default:
+        setError({ status: 404, message: error.message });
+        alert("Error! Opponent left the game!");
+        break;
     }
   };
 
@@ -271,16 +280,10 @@ export default function TicTacToeGame({
     resultRef.current = getResult(newSquares);
   }
   function handleBackClick() {
-    if (onlineMode) {
-      console.log("deleting room...");
-      axios.delete(`/api/tictactoeAPI`, {
-        params: { roomId: roomId },
-      });
-    }
     router.back();
   }
 
-  if (error) return <ErrorPage statusCode={500} />;
+  if (error) router.push(`/tictactoe`);
 
   return (
     <>

@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const delay = (ms) => {
   return new Promise((res) => setTimeout(res, ms));
 };
@@ -35,6 +37,12 @@ function numberOfNullElements(array) {
   array.forEach((element) => (element === null ? count++ : count));
 }
 
+async function deleteRoom(roomId) {
+  await axios.delete("/api/tictactoeAPI", {
+    params: { roomId: roomId, request: "delete" },
+  });
+}
+
 export {
   delay,
   randomBoolean,
@@ -42,4 +50,5 @@ export {
   isXTurn,
   allAreNull,
   numberOfNullElements,
+  deleteRoom,
 };

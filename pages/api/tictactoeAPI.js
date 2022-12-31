@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       } catch (error) {
         res.status(400).send(error.message);
       }
-    } else if (method === "DELETE") {
+    } else if (method === "DELETE" && request === "delete") {
       try {
         const response = await handleDeleteRoom(coll, roomId);
         res.status(200).send(response);
