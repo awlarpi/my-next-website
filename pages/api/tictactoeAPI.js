@@ -1,5 +1,4 @@
 import { clientPromise } from "../../functions/mongoDB";
-import { useInterval } from "../../functions/useInterval";
 var crypto = require("crypto");
 const util = require("util");
 
@@ -145,6 +144,7 @@ async function handleCreateRoom(coll) {
     //new room data
     const roomDocument = {
       _id: newRoomId,
+      createdAt: new Date(),
       Latest_Move: -1,
       Room_Full: false,
       Is_Player1_Turn: player1StartFirst,

@@ -1,9 +1,7 @@
 import { useState, useEffect, useContext, useRef } from "react";
-import { useDarkMode } from "usehooks-ts";
-import { useInterval } from "../functions/useInterval";
+import { useDarkMode, useInterval } from "usehooks-ts";
 import style from "../styles/Game.module.css";
 import Head from "next/head";
-import ErrorPage from "next/error";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { bestBotMove, getResult } from "../functions/tictactoeBot";
@@ -55,6 +53,7 @@ export default function TicTacToeGame({
     };
   }, [roomId, onlineMode]);
 
+  //short polling for opponent move at 1s interval
   useInterval(
     async function () {
       try {
@@ -332,7 +331,6 @@ function MenuBar({ setTheme, handleBackClick, roomId, onlineMode }) {
           <p>Room: {roomId}</p>
         </div>
       )}
-      <div></div>
       <button
         className={`${style.themeSelector}`}
         onClick={() => setTheme()}

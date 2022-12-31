@@ -65,6 +65,107 @@
   }
 }
 
+.landingMain {
+  display: flex;
+  flex-direction: column;
+  /* add this style */
+  align-items: center;
+  text-align: center;
+  height: 100vh;
+  font-family: "Oswald", sans-serif;
+  justify-content: center;
+}
+
+.landingMenu {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.landingMenu h2 {
+  font-size: 40px;
+  line-height: 28px;
+}
+
+.landingMenuItem {
+  display: flex;
+  width: 450px;
+  padding: 25px;
+  margin: 25px;
+  border: 2px solid;
+  border-color: inherit;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: large;
+}
+
+.landingForm {
+  padding-top: 15px;
+  font-size: large;
+  width: 450px;
+  padding-bottom: 12px;
+  border: 2px solid;
+  border-radius: 10px;
+  text-decoration: none;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: inherit;
+}
+
+.landingMenuItem:hover {
+  background-color: lightgray;
+}
+
+.landingLabel,
+.landingInput {
+  margin-top: 0%;
+  margin: 10px;
+  background-color: inherit;
+  color: inherit;
+  font-size: inherit;
+}
+.landingLabel {
+  margin-bottom: 10px;
+}
+.landingInput {
+  margin-top: 15px;
+  border-style: dashed;
+  border-color: inherit;
+  font-family: inherit;
+  font-style: normal;
+  font-size: 25px;
+  line-height: 28px;
+  padding: 5px;
+}
+.landingInput:focus {
+  outline: none;
+}
+
+.joinButton {
+  margin-top: 3px;
+  width: 13%;
+  font-size: inherit;
+  font-family: inherit;
+  background-color: inherit;
+  color: inherit;
+  border: 2px solid;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 25px;
+}
+
+.errorMessage {
+  padding-top: 3px;
+}
+
 .main {
   display: flex;
   align-items: center;

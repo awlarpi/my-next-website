@@ -1,14 +1,12 @@
-import styles from "../../styles/Home.module.css";
+import styles from "../../styles/Game.module.css";
 import Link from "next/link";
-import { Inter } from "@next/font/google";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useState } from "react";
-const util = require("util");
-
-const inter = Inter({ subsets: ["latin"] });
+import { useDarkMode } from "usehooks-ts";
 
 export default function Home() {
+  const { isDarkMode, toggle, enable, disable } = useDarkMode();
   const router = useRouter();
 
   //create new room
@@ -32,35 +30,33 @@ export default function Home() {
   };
 
   return (
-    <div className={styles.grid}>
-      <button
-        onClick={handleOnlineModeClick}
-        className={styles.card}
-        rel="noopener noreferrer"
-      >
-        <h2 className={inter.className}>
-          Tic-Tac-Toe Online<span>-&gt;</span>
-        </h2>
-        <p className={inter.className}>Create new game room!</p>
-      </button>
+    <main
+      className={`${styles.landingMain} ${
+        styles[isDarkMode ? "dark" : "light"]
+      }`}
+    >
+      <button className={styles.themeSelector} onClick={toggle}></button>
 
-      <JoinGameForm />
+      <div className={styles.landingMenu}>
+        <a className={styles.landingMenuItem} onClick={handleOnlineModeClick}>
+          <h2>
+            Create new game room!<span>-&gt;</span>
+          </h2>
+        </a>
 
-      <Link
-        href="/tictactoe/game/offline"
-        className={styles.card}
-        rel="noopener noreferrer"
-      >
-        <h2 className={inter.className}>
-          Tic-Tac-Toe Offline<span>-&gt;</span>
-        </h2>
-        <p className={inter.className}>Play tic-tac-toe offline!</p>
-      </Link>
-    </div>
+        <JoinGameForm />
+
+        <Link className={styles.landingMenuItem} href="/tictactoe/game/offline">
+          <h2>
+            Play Offline!<span>-&gt;</span>
+          </h2>
+        </Link>
+      </div>
+    </main>
   );
 }
 
-const JoinGameForm = () => {
+function JoinGameForm() {
   const [roomId, setRoomId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
@@ -85,26 +81,26 @@ const JoinGameForm = () => {
       });
     } catch (error) {
       console.error(error);
-      setErrorMessage(error);
+      setErrorMessage(error.response.data);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.card}>
-      <label htmlFor="roomId" className={inter.className}>
-        Room ID:
+    <form onSubmit={handleSubmit} className={styles.landingForm}>
+      <label htmlFor="roomId" className={styles.landingLabel}>
+        <h2>Join room with ID:</h2>
       </label>
       <input
-        className={inter.className}
         type="alphanumeric"
         id="roomId"
         value={roomId}
         onChange={(event) => setRoomId(event.target.value)}
+        className={styles.landingInput}
       />
-      <button className={inter.className} type="submit">
+      <button type="submit" className={styles.joinButton}>
         Join
       </button>
-      {errorMessage && <p className={inter.className}>{errorMessage}</p>}
+      {errorMessage && <p className={styles.errorMessage}>{errorMessage}</p>}
     </form>
   );
-};
+}
