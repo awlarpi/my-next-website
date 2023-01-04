@@ -282,7 +282,7 @@ export default function TicTacToeGame({
     router.back();
   }
 
-  if (error) router.push(`/tictactoe`);
+  if (error) router.push(`/`);
 
   return (
     <>
