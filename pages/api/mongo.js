@@ -1,7 +1,3 @@
-export const config = {
-  runtime: "edge",
-}
-
 import { clientPromise } from "../../functions/mongoDB"
 
 export default async function handler(req, res) {

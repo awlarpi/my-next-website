@@ -1,7 +1,3 @@
-export const config = {
-  runtime: 'edge',
-}
-
 import { clientPromise } from "../../functions/mongoDB";
 var crypto = require("crypto");
 const util = require("util");

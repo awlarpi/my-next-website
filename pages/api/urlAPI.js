@@ -1,7 +1,3 @@
-export const config = {
-  runtime: "edge",
-}
-
 import axios from "axios"
 const util = require("util")
 
