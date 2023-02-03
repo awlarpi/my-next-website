@@ -5,49 +5,35 @@ import Link from "next/link"
 import * as atoms from "./game_atoms"
 
 export function MenuBar() {
-  const [roomId] = useAtom(atoms.roomIdAtom)
-  const [onlineMode] = useAtom(atoms.onlineModeAtom)
   return (
     <div className={`${style.menuBar}`}>
       <Link href="/" className={`${style.homeLink}`}>
         <u>Back</u>
       </Link>
-      {onlineMode && <p className={`${style.roomId}`}>Room: {roomId}</p>}
     </div>
   )
 }
 
-export function GameMenuBar({
-  handleReset,
-  handlePlayerModeToggle,
-  startFirst,
-}) {
-  const [onlineMode] = useAtom(atoms.onlineModeAtom)
+export function GameMenuBar({ handleReset, handlePlayerModeToggle }) {
   const [gameMode] = useAtom(atoms.gameModeAtom)
   const [result] = useAtom(atoms.resultAtom)
   const [currentPlayer] = useAtom(atoms.playerAtom)
   return (
     <div className={`${style.infoContainer}`}>
-      {!onlineMode && (
-        <button className={`${style.resetButton}`} onClick={handleReset}>
-          Reset
-        </button>
-      )}
-
-      <button className={`${style.resetButton} ${result && style.celebrate}`}>
-        {onlineMode
-          ? onlineCurrentPlayerText(result, currentPlayer, startFirst)
-          : offlineCurrentPlayerText(result, currentPlayer)}
+      <button className={`${style.resetButton}`} onClick={handleReset}>
+        Reset
       </button>
 
-      {!onlineMode && (
-        <button
-          className={`${style.resetButton}`}
-          onClick={handlePlayerModeToggle}
-        >
-          {gameMode === "singlePlayer" ? "2P" : "1P"}
-        </button>
-      )}
+      <button className={`${style.resetButton} ${result && style.celebrate}`}>
+        {offlineCurrentPlayerText(result, currentPlayer)}
+      </button>
+
+      <button
+        className={`${style.resetButton}`}
+        onClick={handlePlayerModeToggle}
+      >
+        {gameMode === "singlePlayer" ? "2P" : "1P"}
+      </button>
     </div>
   )
 }
@@ -97,18 +83,6 @@ function Square({ index, handleTileClick }) {
 function offlineCurrentPlayerText(result, currentPlayer) {
   if (!result) return `${currentPlayer}, your turn now!`
   return winnerText(result.winner)
-}
-
-function onlineCurrentPlayerText(result, currentPlayer, startFirst) {
-  if (result) return winnerText(result.winner)
-  if (startFirst) {
-    //player is playing as X
-    if (currentPlayer === "X") return `Player X : Your turn!`
-    return `Player X : Opponent's turn!`
-  }
-  //player is playing as O
-  if (currentPlayer === "O") return `Player O : Your turn!`
-  return `Player O : Opponent's turn!`
 }
 
 function winnerText(winner) {

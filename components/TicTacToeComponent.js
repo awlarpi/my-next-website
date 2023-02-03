@@ -1,4 +1,4 @@
-import { useInit, useOnPlayerMove, useShortPolling } from "./custom_hooks"
+import { useInit, useOnPlayerMove } from "./custom_hooks"
 import { useAtom } from "jotai"
 import { useRouter } from "next/router"
 import { bestBotMove, getResult } from "../functions/tictactoeBot"
@@ -9,8 +9,6 @@ import * as atoms from "./game_atoms"
 
 export default function TicTacToeGame(props) {
   const router = useRouter()
-  const [, setLatestMove] = useAtom(atoms.latestMoveAtom)
-  const [, setMyMove] = useAtom(atoms.myLatestMoveAtom)
   const [error] = useAtom(atoms.errorAtom)
   const [squares, setSquares] = useAtom(atoms.squaresAtom)
   const [, setIsOpponentTurn] = useAtom(atoms.isOpponentTurnAtom)
@@ -18,27 +16,18 @@ export default function TicTacToeGame(props) {
   const [gameMode, setGameMode] = useAtom(atoms.gameModeAtom)
   const [player, setPlayer] = useAtom(atoms.playerAtom)
 
-  useInit({ ...props })
-  useOnPlayerMove(handleBotMove, props.startFirst, props.onlineMode)
-  useShortPolling()
-
-  console.log("page load")
+  useInit()
+  useOnPlayerMove(handleBotMove)
 
   function handleTileClick(index) {
     if (squares[index]) return //return if tile is full  already
-    if (!props.onlineMode) {
-      if (result) return //return if gameOver or tile is clicked already
-      onIndexUpdate(index)
-      //handle everything and swap players
-      if (result || gameMode !== "singlePlayer") return //if gameOver or is double player
-      setIsOpponentTurn(true) //game not ended and is single player
-      return
-    }
-    //else is online mode
-    setMyMove(index)
-    setLatestMove(index)
+
+    if (result) return //return if gameOver or tile is clicked already
     onIndexUpdate(index)
-    setIsOpponentTurn(true)
+    //handle everything and swap players
+    if (result || gameMode !== "singlePlayer") return //if gameOver or is double player
+    setIsOpponentTurn(true) //game not ended and is single player
+    return
   }
 
   async function handleBotMove() {
