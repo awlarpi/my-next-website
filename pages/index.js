@@ -3,11 +3,11 @@ import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { useDarkMode } from "usehooks-ts";
+// import { useDarkMode } from "usehooks-ts";
 import Head from "next/head";
 
 export default function Home() {
-  const { isDarkMode, toggle, enable, disable } = useDarkMode();
+  // const { isDarkMode, toggle, enable, disable } = useDarkMode();
   const router = useRouter();
 
   //create new room
@@ -56,10 +56,11 @@ export default function Home() {
       </Head>
       <main
         className={`${styles.landingMain} ${
-          styles[isDarkMode ? "dark" : "light"]
+          // styles[isDarkMode ? "dark" : "light"]
+          styles["light"]
         }`}
       >
-        <button className={styles.themeSelector} onClick={toggle}></button>
+        {/* <button className={styles.themeSelector} onClick={toggle}></button> */}
 
         <div className={styles.landingMenu}>
           <a className={styles.landingMenuItem} onClick={handleOnlineModeClick}>

@@ -196,32 +196,38 @@
   /*border: 1px yellow solid;*/
 }
 
-.homeLink {
-  position: absolute;
+.menuBar {
+  width: 100vw;
+  position: fixed;
+  display: flex;
   top: 1vh;
-  left: 1vw;
+  justify-content: space-between;
+}
+
+.homeLink {
+  margin-left: 1vw;
   font-size: 25px;
-  opacity: 100%;
+  cursor: pointer;
 }
 
 .roomId {
-  position: fixed;
-  top: 1vh;
+  margin-right: 1vw;
   font-size: 25px;
-  opacity: 100%;
-  justify-self: center;
+  text-align: center;
 }
 
 .themeSelector {
   position: absolute;
   top: 1vh;
-  right: 1vw;
+  right: 1vh;
+  margin-right: 1vw;
   border: 0;
   opacity: 100%;
   cursor: pointer;
   width: 40px;
   height: 40px;
 }
+
 .dark .themeSelector {
   background-color: white;
 }
