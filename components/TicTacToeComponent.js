@@ -17,12 +17,14 @@ export default function TicTacToeGame(props) {
   const [result, setResult] = useAtom(atoms.resultAtom)
   const [gameMode, setGameMode] = useAtom(atoms.gameModeAtom)
   const [player, setPlayer] = useAtom(atoms.playerAtom)
+  const [initialized] = useAtom(atoms.initializedAtom)
 
   useInit({ ...props })
-  useOnPlayerMove(handleBotMove, props.startFirst, props.onlineMode)
-  useShortPolling()
 
-  console.log("page load")
+  useOnPlayerMove(handleBotMove, props.startFirst, props.onlineMode)
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (props.onlineMode) useShortPolling()
 
   function handleTileClick(index) {
     if (squares[index]) return //return if tile is full  already
@@ -42,6 +44,9 @@ export default function TicTacToeGame(props) {
   }
 
   async function handleBotMove() {
+    console.log("getting bot move")
+    if (result) return //return if gameOver or tile is clicked already
+    if (props.onlineMode) return //return if online mode
     await delay(300)
     const botMove = bestBotMove(squares, player)
     onIndexUpdate(botMove)
@@ -49,6 +54,7 @@ export default function TicTacToeGame(props) {
   }
 
   function handleReset() {
+    console.log("resetting")
     setSquares(Array(9).fill(null))
     setResult(null)
     setPlayer("X")
@@ -60,6 +66,7 @@ export default function TicTacToeGame(props) {
   }
 
   function handlePlayerModeToggle() {
+    console.log("switching player mode")
     setSquares(Array(9).fill(null))
     setResult(null)
     setPlayer("X")
@@ -73,6 +80,7 @@ export default function TicTacToeGame(props) {
   }
 
   function onIndexUpdate(index) {
+    console.log("updating squares")
     const newSquares = [...squares]
     newSquares[index] = player
     setSquares(newSquares)
@@ -82,8 +90,9 @@ export default function TicTacToeGame(props) {
 
   if (error) router.push(`/`)
 
+  if (!initialized) return <div>Loading...</div>
+  
   return (
-    // <div className={`${style.main} ${style[isDarkMode ? "dark" : "light"]}`}>
     <div className={`${style.main} ${style["light"]}`}>
       <MenuBar />
       <div className={style.gameContainer}>

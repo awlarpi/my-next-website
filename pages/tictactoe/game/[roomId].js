@@ -11,7 +11,7 @@ export default function App(props) {
       {loading ? (
         <LoadingScreen roomId={props.roomId} />
       ) : (
-        <TicTacToeGame onlineMode={true} {...props} />
+        <TicTacToeGame {...props} onlineMode={true} />
       )}
     </>
   )
@@ -50,7 +50,7 @@ export async function getServerSideProps(context) {
       notFound: true,
     }
 
-  const { Player1_ID, Player2_ID, Squares, Is_Player1_Turn } = room
+  const { Player1_ID, Player2_ID, Squares, Is_Player1_Turn, Latest_Move } = room
 
   let numberOfEmptyTiles = 0
   for (const property in Squares) {
@@ -95,6 +95,7 @@ export async function getServerSideProps(context) {
       Squares,
       propIsOpponentTurn,
       propCurrentSymbol,
+      Latest_Move
     },
   }
 }

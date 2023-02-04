@@ -1,5 +1,5 @@
-import TicTacToeGame from "../../../components/TicTacToeComponent";
+import TicTacToeGame from "../../../components/TicTacToeComponent"
 
 export default function App() {
-  return <TicTacToeGame onlineMode={false} />;
+  return <TicTacToeGame onlineMode={false} />
 }

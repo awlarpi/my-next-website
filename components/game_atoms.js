@@ -7,6 +7,7 @@ export const isOpponentTurnAtom = atom(Math.random() < 0.5)
 export const squaresAtom = atom(Array(9).fill(null))
 export const playerAtom = atom("X")
 export const errorAtom = atom(null)
+export const initializedAtom = atom(false)
 
 // for online mode
 export const roomIdAtom = atom(null)
