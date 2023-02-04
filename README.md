@@ -1,3 +1,5 @@
+## https://next-tictactoe.pages.dev/
+
 ## Description
 
 This is a simple tic-tac-toe game written in Next.js using vercel serverless functions with a mongoDB atlas integration. It gives players the option to play either in offline mode against the computer or a friend, or in online mode against other players. Both the main page and offline tic-tac-toe page are statically generated, while the online tic-tac-toe page uses dynamic routing and getServerSideProps to fetch data from Mongo DB. The game page itself uses CSS modules for sturcturing , and the entire game page is exported as a component to the offline mode or online mode page.
