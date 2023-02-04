@@ -9,14 +9,14 @@ import * as atoms from "./game_atoms"
 
 export default function TicTacToeGame(props) {
   const router = useRouter()
-  const [error] = useAtom(atoms.errorAtom)
+  const [error, setError] = useAtom(atoms.errorAtom)
   const [squares, setSquares] = useAtom(atoms.squaresAtom)
   const [, setIsOpponentTurn] = useAtom(atoms.isOpponentTurnAtom)
   const [result, setResult] = useAtom(atoms.resultAtom)
   const [gameMode, setGameMode] = useAtom(atoms.gameModeAtom)
   const [player, setPlayer] = useAtom(atoms.playerAtom)
 
-  useInit()
+  useInit(handleReset)
   useOnPlayerMove(handleBotMove)
 
   function handleTileClick(index) {
@@ -41,6 +41,7 @@ export default function TicTacToeGame(props) {
     setSquares(Array(9).fill(null))
     setResult(null)
     setPlayer("X")
+    setError(null)
     if (gameMode === "singlePlayer") {
       setIsOpponentTurn(randomBoolean())
     } else {
